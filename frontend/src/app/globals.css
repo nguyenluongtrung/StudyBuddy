@@ -1,4 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900;1000&family=Fredoka:wght@500;600;700&display=swap');
+@import url('./classroom.css');
 
 :root { --ink:#182622; --muted:#6d7d75; --cream:#f6f4ee; --paper:#fffdf8; --lime:#d5ed66; --orange:#ef8354; --line:#dfe5dd; }
 * { box-sizing:border-box; }
