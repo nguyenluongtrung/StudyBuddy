@@ -38,7 +38,7 @@ Open:
 1. Register at `POST /api/users/register/`.
 2. Sign in at `POST /api/auth/token/` to receive access and refresh tokens.
 3. Send the access token as `Authorization: Bearer <token>`.
-4. Use `/api/subjects/` and `/api/study-sessions/` for user-owned study data.
+4. Use `/api/subjects/` for user-owned subjects. Study sets and review history have database models; their API endpoints are not connected yet.
 
 ## Classroom UI
 

@@ -4,7 +4,7 @@
 
 StudyBuddy is a Dockerized monorepo:
 
-- `backend/` contains the Django REST API. Feature code lives in `backend/apps/` (`users`, `subjects`, and `study_sessions`); shared helpers belong in `backend/common/`.
+- `backend/` contains the Django REST API. Feature code lives in `backend/apps/` (`users`, `subjects`, and `study_sets`); shared helpers belong in `backend/common/`.
 - `frontend/` contains the Next.js App Router client. Routes are under `frontend/src/app/`, reusable components under `frontend/src/components/`, and Django API integrations under `frontend/src/lib/api/`.
 - `docker-compose.yml` runs the backend, frontend, and PostgreSQL services.
 - Environment templates are `backend/.env.example` and `frontend/.env.example`. Never commit real secrets.
