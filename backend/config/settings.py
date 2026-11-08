@@ -22,7 +22,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "apps.users",
     "apps.subjects",
-    "apps.study_sessions",
+    "apps.study_sets",
 ]
 
 MIDDLEWARE = [
@@ -67,6 +67,8 @@ TIME_ZONE = "Asia/Ho_Chi_Minh"
 USE_I18N = True
 USE_TZ = True
 STATIC_URL = "static/"
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {

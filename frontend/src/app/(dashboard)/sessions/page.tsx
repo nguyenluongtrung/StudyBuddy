@@ -1,1 +1,0 @@
-export default function SessionsPage() { return <section className="hero"><section className="panel"><p className="eyebrow">Study sessions</p><h1>Time well spent.</h1><p className="muted">Session history will appear here as you log your first study block.</p></section></section>; }
