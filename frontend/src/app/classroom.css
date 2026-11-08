@@ -77,7 +77,7 @@ button:disabled {
 }
 .classroom-logo small {
   display: block;
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 1000;
   letter-spacing: 0.2px;
 }
@@ -174,7 +174,7 @@ button:disabled {
   border-radius: 16px;
   background: #ecfff2;
   padding: 13px;
-  font-size: 11px;
+  font-size: 13px;
   box-shadow: 2px 3px 0 #31563e;
 }
 .sidebar-tip > span {
@@ -193,7 +193,7 @@ button:disabled {
   border: 0;
   background: transparent;
   color: #527064;
-  font-size: 11px;
+  font-size: 13px;
   text-align: left;
   padding: 0 5px;
 }
@@ -220,7 +220,7 @@ button:disabled {
   display: none;
 }
 .topbar-crumb {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 900;
   white-space: nowrap;
   color: #335f4b;
@@ -250,7 +250,7 @@ button:disabled {
   background: transparent;
   min-width: 0;
   flex: 1;
-  font-size: 11px;
+  font-size: 13px;
 }
 .search-popover {
   position: absolute;
@@ -299,13 +299,13 @@ button:disabled {
 }
 .profile-chip strong {
   display: block;
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1;
 }
 .profile-chip small {
   display: block;
   color: #74867a;
-  font-size: 8px;
+  font-size: 10px;
 }
 .classroom-content {
   flex: 1;
@@ -343,7 +343,7 @@ button:disabled {
   border-radius: 999px;
   padding: 2px 8px;
   color: #12452e;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 1000;
   line-height: 1.3;
   white-space: nowrap;
@@ -390,7 +390,7 @@ button:disabled {
   font-size: 16px;
 }
 .section-title > a {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 1000;
   text-decoration: underline;
 }
@@ -409,7 +409,7 @@ button:disabled {
 }
 .crumbs {
   margin: 0 0 18px;
-  font-size: 11px;
+  font-size: 13px;
   color: #467462;
   font-weight: 800;
 }
@@ -481,7 +481,7 @@ button:disabled {
   position: relative;
 }
 .stat-card small {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 1000;
   color: #09543a;
 }
@@ -494,12 +494,12 @@ button:disabled {
 }
 .stat-card strong span {
   font-family: Nunito, sans-serif;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
   color: #345b47;
 }
 .stat-card p {
-  font-size: 10px;
+  font-size: 12px;
   color: #577464;
   margin: 0;
 }
@@ -568,7 +568,7 @@ button:disabled {
   flex: 1;
 }
 .continue-info small {
-  font-size: 9px;
+  font-size: 11px;
   color: #718279;
 }
 .continue-info h3 {
@@ -587,7 +587,7 @@ button:disabled {
   gap: 8px;
 }
 .progress-line span {
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 1000;
   color: #00583b;
   white-space: nowrap;
@@ -600,7 +600,7 @@ button:disabled {
   gap: 5px;
 }
 .continue-actions .pill-button {
-  font-size: 10px;
+  font-size: 12px;
   padding: 7px 9px;
   white-space: nowrap;
 }
@@ -637,12 +637,12 @@ button:disabled {
 }
 .plan-item small {
   display: block;
-  font-size: 9px;
+  font-size: 11px;
   color: #64816f;
   margin-top: 5px;
 }
 .plan-item .badge {
-  font-size: 8px;
+  font-size: 10px;
 }
 .pace-days {
   display: flex;
@@ -655,7 +655,7 @@ button:disabled {
 .pace-days small {
   display: block;
   color: #5a7665;
-  font-size: 10px;
+  font-size: 12px;
 }
 .pace-days b {
   display: grid;
@@ -677,7 +677,7 @@ button:disabled {
   border-radius: 20px;
   background: #fffbea;
   padding: 12px;
-  font-size: 10px;
+  font-size: 12px;
   margin: 0;
 }
 .binder-heading {
@@ -710,7 +710,7 @@ button:disabled {
   border-radius: 11px;
   background: #fff;
   padding: 8px 10px;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 900;
   color: #124330;
 }
@@ -732,7 +732,7 @@ button:disabled {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 1000;
 }
 .binder-summary strong {
@@ -769,7 +769,7 @@ button:disabled {
   border-radius: 999px;
   background: #fff;
   padding: 5px 10px;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 900;
 }
 .filter-chip.selected,
@@ -827,7 +827,7 @@ button:disabled {
   color: #083a28;
 }
 .binder-card-title p {
-  font-size: 9px;
+  font-size: 11px;
   color: #527665;
   margin: 7px 0 0;
 }
@@ -840,7 +840,7 @@ button:disabled {
   flex-wrap: wrap;
 }
 .topic-tags span {
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 900;
   color: #245c41;
   background: #e9fff2;
@@ -858,7 +858,7 @@ button:disabled {
 .mastery-meter > div:first-child {
   display: flex;
   justify-content: space-between;
-  font-size: 9px;
+  font-size: 11px;
   color: #176448;
 }
 .mastery-meter .progress-track {
@@ -871,7 +871,7 @@ button:disabled {
 }
 .binder-card-actions .pill-button {
   flex: 1;
-  font-size: 10px;
+  font-size: 12px;
   padding: 6px;
 }
 .card-cover-link {
@@ -927,7 +927,7 @@ button:disabled {
   margin: 5px 0;
 }
 .upload-card b {
-  font-size: 11px;
+  font-size: 13px;
   color: #09613e;
 }
 .empty-state {
@@ -972,7 +972,7 @@ button:disabled {
   margin: 12px 0;
 }
 .detail-hero p {
-  font-size: 11px;
+  font-size: 13px;
   color: #64806d;
 }
 .recent-progress {
@@ -996,11 +996,11 @@ button:disabled {
   font-size: 17px;
 }
 .recent-progress span {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 1000;
 }
 .recent-progress b {
-  font-size: 9px;
+  font-size: 11px;
 }
 .study-action-grid {
   display: grid;
@@ -1047,14 +1047,14 @@ button:disabled {
   border: 1px solid #30573e;
   border-radius: 99px;
   padding: 3px 7px;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 1000;
 }
 .study-action > small {
   display: flex;
   justify-content: space-between;
   color: #30634a;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 1000;
   margin-top: 14px;
 }
@@ -1090,7 +1090,7 @@ button:disabled {
   margin: 0;
 }
 .lecture-heading p {
-  font-size: 11px;
+  font-size: 13px;
   color: #68816e;
   margin: 2px 0;
 }
@@ -1122,7 +1122,7 @@ button:disabled {
   height: 23px;
   display: grid;
   place-items: center;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 1000;
   margin-right: 7px;
 }
@@ -1131,7 +1131,7 @@ button:disabled {
   margin: 3px 0 8px;
 }
 .note-card p {
-  font-size: 11px;
+  font-size: 13px;
   color: #375746;
   line-height: 1.55;
   margin: 0;
@@ -1186,7 +1186,7 @@ button:disabled {
   border: 1px solid #264935;
   border-radius: 999px;
   padding: 4px 10px;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 1000;
 }
 .section-tab.yellow-tab {
@@ -1195,7 +1195,7 @@ button:disabled {
 }
 .editor-section label {
   display: block;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 1000;
   margin: 5px 0;
 }
@@ -1238,7 +1238,7 @@ button:disabled {
   padding: 10px 15px;
 }
 .editor-tabs span {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 1000;
   padding: 5px 9px;
   border-radius: 8px;
@@ -1259,12 +1259,12 @@ button:disabled {
   resize: vertical;
   min-height: 260px;
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.55;
 }
 .notes-body small {
   color: #65816d;
-  font-size: 10px;
+  font-size: 12px;
 }
 .output-section h2 {
   font:
@@ -1274,7 +1274,7 @@ button:disabled {
   margin: 2px 0;
 }
 .output-section > p {
-  font-size: 11px;
+  font-size: 13px;
   color: #627c69;
   margin: 0 0 14px;
 }
@@ -1308,7 +1308,7 @@ button:disabled {
   font-size: 12px;
 }
 .output-grid small {
-  font-size: 10px;
+  font-size: 12px;
   color: #65816c;
   margin-top: 3px;
 }
@@ -1323,7 +1323,7 @@ button:disabled {
   padding: 12px 16px;
 }
 .editor-footer > span {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 1000;
   color: #255e44;
 }
@@ -1360,7 +1360,7 @@ button:disabled {
 .flash-progress {
   text-align: right;
   width: 160px;
-  font-size: 11px;
+  font-size: 13px;
 }
 .flash-progress .progress-track {
   margin-top: 8px;
@@ -1524,7 +1524,7 @@ button:disabled {
   border: 1px solid #416b51;
   border-radius: 99px;
   padding: 5px 12px;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 900;
   color: #367457;
 }
@@ -1546,7 +1546,7 @@ button:disabled {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 1000;
 }
 .session-card,
@@ -1592,7 +1592,7 @@ button:disabled {
   border-radius: 99px;
   background: #ffeab0;
   padding: 4px;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 1000;
 }
 .session-pills span + span {
@@ -1605,7 +1605,7 @@ button:disabled {
   margin: 0;
 }
 .tip-card p {
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.5;
   margin: 8px 0 0;
 }
@@ -1623,7 +1623,7 @@ button:disabled {
   display: flex;
   gap: 7px;
   flex-wrap: wrap;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 1000;
   color: #176346;
 }
@@ -1645,7 +1645,7 @@ button:disabled {
   padding: 16px;
 }
 .active-set-card > span {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 1000;
   display: flex;
   justify-content: space-between;
@@ -1659,7 +1659,7 @@ button:disabled {
 }
 .active-set-card p,
 .active-set-card div {
-  font-size: 10px;
+  font-size: 12px;
   color: #577764;
 }
 .active-set-card div {
@@ -1700,7 +1700,7 @@ button:disabled {
   margin: 0;
 }
 .setup-group p {
-  font-size: 10px;
+  font-size: 12px;
   margin: 2px 0;
   color: #69816d;
 }
@@ -1741,13 +1741,13 @@ button:disabled {
   margin: 4px 0;
 }
 .setup-option small {
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.4;
   color: #587463;
   flex: 1;
 }
 .option-footer {
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 1000;
   margin-top: 10px;
   color: #165e42;
@@ -1757,7 +1757,7 @@ button:disabled {
   border: 1px solid #4ca16d;
   border-radius: 10px;
   background: #bff2d3;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 900;
   color: #1e6446;
 }
@@ -1788,11 +1788,11 @@ button:disabled {
   font-size: 14px;
 }
 .quiz-progress strong small {
-  font-size: 9px;
+  font-size: 11px;
   color: #5e7968;
 }
 .quiz-progress a {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 900;
 }
 .quiz-progress .progress-track {
@@ -1832,10 +1832,10 @@ button:disabled {
   flex: none;
 }
 .note-graphic small {
-  font-size: 8px;
+  font-size: 10px;
 }
 .study-note p {
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.5;
   margin: 0;
   color: #547565;
@@ -1869,7 +1869,7 @@ button:disabled {
   border-radius: 50%;
   display: grid;
   place-items: center;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 1000;
   flex: none;
 }
@@ -1905,7 +1905,7 @@ button:disabled {
   border-radius: 50%;
   width: 23px;
   height: 23px;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 1000;
 }
 .question-dots button.answered {
@@ -1959,11 +1959,11 @@ button:disabled {
     sans-serif;
 }
 .score-card span {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 1000;
 }
 .score-card small {
-  font-size: 9px;
+  font-size: 11px;
   color: #69816d;
 }
 .results-actions {
@@ -1975,7 +1975,7 @@ button:disabled {
 }
 .results-actions > a:last-child {
   margin-left: auto;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 1000;
   text-decoration: underline;
 }
@@ -1994,7 +1994,7 @@ button:disabled {
   margin: 0;
 }
 .review-header p {
-  font-size: 11px;
+  font-size: 13px;
   color: #68806f;
   margin: 2px 0;
 }
@@ -2019,7 +2019,7 @@ button:disabled {
   padding-bottom: 10px;
 }
 .review-meta small {
-  font-size: 10px;
+  font-size: 12px;
   color: #667e6d;
 }
 .review-card h3 {
@@ -2044,11 +2044,11 @@ button:disabled {
   border-color: #e58d7c;
 }
 .review-answers small {
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 1000;
 }
 .review-answers p {
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.4;
   margin: 5px 0 0;
 }
@@ -2060,10 +2060,10 @@ button:disabled {
   margin-top: 11px;
 }
 .explanation strong {
-  font-size: 10px;
+  font-size: 12px;
 }
 .explanation p {
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.4;
   margin: 3px 0 0;
 }
@@ -2079,7 +2079,7 @@ button:disabled {
   font-size: 13px;
 }
 .momentum-card p {
-  font-size: 10px;
+  font-size: 12px;
   margin: 3px 0;
   color: #5d7665;
 }
@@ -2145,7 +2145,7 @@ button:disabled {
   border: 2px solid #244934;
   border-radius: 99px;
   padding: 5px 13px;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 1000;
   box-shadow: 2px 2px 0 #284636;
 }
@@ -2193,7 +2193,7 @@ button:disabled {
   border: 2px solid #34533f;
   border-radius: 99px;
   padding: 6px 12px;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 1000;
   transform: rotate(5deg);
 }
@@ -2219,7 +2219,7 @@ button:disabled {
   border-radius: 99px;
   background: #fff;
   padding: 8px;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 1000;
   box-shadow: 2px 3px 0 #284636;
 }
@@ -2232,7 +2232,7 @@ button:disabled {
   display: flex;
   align-items: center;
   gap: 9px;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 1000;
   justify-content: center;
   margin: 19px 0;
@@ -2250,11 +2250,11 @@ button:disabled {
   justify-content: space-between;
   align-items: center;
   margin: 12px 0 4px;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 1000;
 }
 .field-heading > span:not(.badge) {
-  font-size: 9px;
+  font-size: 11px;
   color: #267150;
 }
 .input-wrap {
@@ -2292,7 +2292,7 @@ button:disabled {
   justify-content: space-between;
   align-items: center;
   margin: 13px 0 18px;
-  font-size: 10px;
+  font-size: 12px;
 }
 .remember-row label {
   display: flex;
@@ -2318,7 +2318,7 @@ button:disabled {
 }
 .signup-line {
   text-align: center;
-  font-size: 11px;
+  font-size: 13px;
   color: #69816f;
   margin: 20px 0;
 }
@@ -2330,13 +2330,13 @@ button:disabled {
   border-top: 1px dashed #c7e7d2;
   padding-top: 16px;
   text-align: center;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 1000;
 }
 .auth-footer {
   text-align: center;
   margin-top: 28px;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 1000;
   color: #315943;
 }
@@ -2540,7 +2540,7 @@ button:disabled {
     font-size: 33px;
   }
   .binder-summary {
-    font-size: 9px;
+    font-size: 11px;
   }
   .page-toolbar {
     flex-direction: column;
@@ -2620,7 +2620,7 @@ button:disabled {
   border-radius: 8px;
   background: #fff;
   color: #15573d;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 1000;
   padding: 5px 9px;
 }

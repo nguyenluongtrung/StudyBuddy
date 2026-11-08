@@ -115,9 +115,6 @@ export default function LoginPage() {
             {busy ? "Signing in..." : "Sign In to Study Buddy →"}
           </button>
         </form>
-        <Link className="preview-link" href="/dashboard">
-          Preview the classroom without signing in →
-        </Link>
         <p className="signup-line">
           Don’t have an account?{" "}
           <Link href="/register">Sign up free for students ↗</Link>
