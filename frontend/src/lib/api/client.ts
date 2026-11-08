@@ -9,6 +9,9 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
 
   const response = await fetch(`${API_URL}${path}`, { ...options, headers });
   const data = await response.json().catch(() => null);
-  if (!response.ok) throw new Error(data?.detail ?? "Something went wrong");
+  if (!response.ok) {
+    const message = data?.detail ?? Object.values(data ?? {}).flat().join(" ") ?? "Something went wrong";
+    throw new Error(message || "Something went wrong");
+  }
   return data as T;
 }
