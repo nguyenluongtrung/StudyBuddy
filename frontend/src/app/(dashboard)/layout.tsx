@@ -1,3 +1,3 @@
-import { Nav } from "@/components/layout/Nav";
+import { ClassroomShell } from "@/components/classroom/ClassroomShell";
 
-export default function DashboardLayout({ children }: Readonly<{ children: React.ReactNode }>) { return <main className="shell"><Nav />{children}</main>; }
+export default function DashboardLayout({ children }: Readonly<{ children: React.ReactNode }>) { return <ClassroomShell>{children}</ClassroomShell>; }

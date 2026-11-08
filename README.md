@@ -40,6 +40,12 @@ Open:
 3. Send the access token as `Authorization: Bearer <token>`.
 4. Use `/api/subjects/` and `/api/study-sessions/` for user-owned study data.
 
+## Classroom UI
+
+The frontend opens at `/login`. After signing in, `/dashboard` links to the study set binder and the create, edit, flashcard, quiz, and results screens. The classroom design follows the supplied Stitch screenshots.
+
+The new study set flow is a frontend prototype. It starts with sample decks and stores each signed-in user's sets and latest quiz results in that browser's local storage. Paste notes or upload `.txt` and `.md` files to create cards and practice questions. PDF and slide import, Google SSO, and server persistence are not connected yet; the existing username/password sign-in still uses the Django API.
+
 ## Project structure
 
 `backend/apps/` contains feature-owned Django apps. `backend/common/` contains only shared backend helpers. `frontend/src/app/` contains route groups, while `frontend/src/lib/api/` is the single place for frontend-to-Django requests.

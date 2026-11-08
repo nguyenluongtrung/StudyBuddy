@@ -8,5 +8,6 @@ __pycache__/
 venv/
 node_modules/
 .next/
+*.tsbuildinfo
 *.log
 .DS_Store
