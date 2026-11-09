@@ -7,13 +7,106 @@ import { readActiveStudyUser } from "@/lib/study-data";
 import { studySetPath } from "@/lib/api/study-sets";
 
 export default function DashboardPage() {
-  const { sets } = useStudySets();
-  const [name, setName] = useState("Maya");
-  useEffect(() => { const update = () => setName(readActiveStudyUser() || "Maya"); update(); window.addEventListener("studybuddy:sets", update); return () => window.removeEventListener("studybuddy:sets", update); }, []);
+  const { sets, loading, apiError } = useStudySets();
+  const [name, setName] = useState("");
+  useEffect(() => {
+    const update = () => setName(readActiveStudyUser());
+    update();
+    window.addEventListener("studybuddy:sets", update);
+    return () => window.removeEventListener("studybuddy:sets", update);
+  }, []);
   const active = sets.slice(0, 3);
-  return <div className="dashboard-page">
-    <section className="welcome-card outlined-card"><div><div className="badge-row"><span className="badge mint">🔥 Classroom Study Session</span><span className="badge yellow">Semester 2</span></div><h1>Welcome back, {name}! <span>🌿</span></h1><p>Ready to study today? You’re on track for your upcoming exams. Let’s make learning simple!</p></div><Link className="pill-button dark" href="/study-sets/new">⊕ New Study Set</Link></section>
-    <div className="stats-grid"><div className="stat-card outlined-card"><small>ACTIVE STUDY SETS</small><strong>{sets.length}<span> sets in progress</span></strong><p>◉ All up to date</p><span className="stat-icon">▱</span></div><div className="stat-card outlined-card"><small>QUIZZES COMPLETED</small><strong>28<span> sessions done</span></strong><p>184 questions mastered</p><span className="stat-icon yellow-icon">▣</span></div><div className="stat-card outlined-card"><small>DAILY STREAK</small><strong>5 Days <span>🔥</span></strong><p><span className="badge yellow">Keep the momentum! ✨</span></p><span className="stat-icon peach-icon">♨</span></div></div>
-    <div className="dashboard-columns"><section><div className="section-title"><h2>Continue Studying <span className="badge mint">{active.length} Active Sets</span></h2><Link href="/study-sets">View all sets →</Link></div><div className="continue-list">{active.map((set, index) => <article className="continue-card outlined-card" key={set.id}><div className={`course-icon course-icon-${index}`}>{index === 0 ? "♧" : index === 1 ? "♛" : "⚗"}</div><div className="continue-info"><div><span className="badge mint">{set.course}</span> <small>{set.cards.length} concepts</small></div><h3>{set.title}</h3><div className="progress-line"><span>{set.mastery}% mastery</span><div className="progress-track"><i style={{ width: `${set.mastery}%` }} /></div></div></div><div className="continue-actions"><Link className="pill-button light" href={`${studySetPath(set.id)}/flashcards`}>Review Cards</Link><Link className="pill-button dark" href={`${studySetPath(set.id)}/quiz/setup`}>Take Quick Quiz</Link></div></article>)}</div></section><aside className="dashboard-aside"><section className="plan-card outlined-card"><div className="section-title"><h3>▣ Today’s Plan</h3><span className="badge yellow">Friday ☀</span></div><div className="plan-item completed"><span>☑</span><p>CRISPR-10<br/><strong>Flashcards</strong><small>Completed this morning</small></p><span className="badge mint">Done</span></div><Link href={`${studySetPath(sets[0]?.id || "synaptic-transmission")}/quiz/setup`} className="plan-item"><span>☐</span><p>NEUR 201 Practice<br/><strong>Quiz</strong><small>~10 min review</small></p><span className="badge mint">Start</span></Link><Link href={`${studySetPath(sets[0]?.id || "synaptic-transmission")}/flashcards`} className="plan-item"><span>☐</span><p>Review Chem<br/><strong>Formulas</strong><small>~5 min quick look</small></p><span className="badge mint">Start</span></Link></section><section className="pace-card outlined-card"><div className="section-title"><h3>This Week’s Pace</h3><span className="badge mint">Goal: 4/5 days</span></div><div className="pace-days">{["M","T","W","T","F","S","S"].map((day, index) => <span key={index}><small>{day}</small><b className={index < 5 ? "checked" : ""}>{index < 4 ? "✓" : index === 4 ? "★" : ""}</b></span>)}</div><p>✨ Awesome consistency! You’ve studied 5 days in a row.</p></section></aside></div>
-  </div>;
+
+  return (
+    <div className="dashboard-page">
+      <section className="welcome-card outlined-card">
+        <div>
+          <div className="badge-row">
+            <span className="badge mint">Classroom</span>
+          </div>
+          <h1>Welcome back{name ? `, ${name}` : ""}!</h1>
+          <p>Your study sets are ready when you are.</p>
+        </div>
+        <Link className="pill-button dark" href="/study-sets/new">
+          New Study Set
+        </Link>
+      </section>
+      {apiError && (
+        <div className="form-error" role="alert">
+          Saved account sets could not be loaded: {apiError}
+        </div>
+      )}
+      <div className="stats-grid">
+        <div className="stat-card outlined-card">
+          <small>STUDY SETS</small>
+          <strong>{sets.length}</strong>
+          <p>Sets in your collection</p>
+        </div>
+        <div className="stat-card outlined-card">
+          <small>FLASHCARDS</small>
+          <strong>
+            {sets.reduce((sum, set) => sum + set.cards.length, 0)}
+          </strong>
+          <p>Cards to review</p>
+        </div>
+        <div className="stat-card outlined-card">
+          <small>QUIZ QUESTIONS</small>
+          <strong>
+            {sets.reduce((sum, set) => sum + set.questions.length, 0)}
+          </strong>
+          <p>Questions to practice</p>
+        </div>
+      </div>
+      <section>
+        <div className="section-title">
+          <h2>Continue Studying</h2>
+          <Link href="/study-sets">View all sets →</Link>
+        </div>
+        {loading ? (
+          <div className="empty-state">Loading study sets…</div>
+        ) : active.length === 0 ? (
+          <div className="empty-state">
+            You have no study sets yet.{" "}
+            <Link href="/study-sets/new">Create your first set</Link>.
+          </div>
+        ) : (
+          <div className="continue-list">
+            {active.map((set) => (
+              <article className="continue-card outlined-card" key={set.id}>
+                <div className="course-icon" aria-hidden="true">
+                  {set.subject.slice(0, 1).toUpperCase()}
+                </div>
+                <div className="continue-info">
+                  <div>
+                    <span className="badge mint">{set.course}</span>{" "}
+                    <small>
+                      {set.cards.length} cards · {set.questions.length}{" "}
+                      questions
+                    </small>
+                  </div>
+                  <h3>{set.title}</h3>
+                </div>
+                <div className="continue-actions">
+                  <Link
+                    className="pill-button light"
+                    href={studySetPath(set.id)}
+                  >
+                    View Set
+                  </Link>
+                  {set.cards.length > 0 && (
+                    <Link
+                      className="pill-button dark"
+                      href={`${studySetPath(set.id)}/flashcards`}
+                    >
+                      Review Cards
+                    </Link>
+                  )}
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
+    </div>
+  );
 }

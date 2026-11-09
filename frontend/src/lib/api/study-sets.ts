@@ -44,6 +44,12 @@ export const getApiStudySet = (id: number) => apiFetch<ApiStudySet>(`/study-sets
 export const createApiStudySet = (data: FormData) => apiFetch<ApiStudySet>("/study-sets/", { method: "POST", body: data });
 export const updateApiStudySet = (id: number, data: FormData) => apiFetch<ApiStudySet>(`/study-sets/${id}/`, { method: "PATCH", body: data });
 export const generateApiStudySet = (id: number) => apiFetch<ApiStudySet>(`/study-sets/${id}/generate/`, { method: "POST" });
+export type FlashcardProgress = { known_flashcard_ids: number[] };
+export const getFlashcardProgress = (id: number) => apiFetch<FlashcardProgress>(`/study-sets/${id}/flashcard-progress/`);
+export const saveFlashcardFeedback = (id: number, flashcardId: number, feedback: "known" | "learning") =>
+  apiFetch<FlashcardProgress>(`/study-sets/${id}/flashcard-progress/`, {
+    method: "POST", body: JSON.stringify({ flashcard_id: flashcardId, feedback }),
+  });
 
 export function toStudySet(value: ApiStudySet): StudySet {
   return {

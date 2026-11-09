@@ -297,8 +297,13 @@ button:disabled {
   padding: 20px;
 }
 
-.generation-banner p { margin: 8px 0 16px; }
-.pill-button:disabled { opacity: .55; cursor: not-allowed; }
+.generation-banner p {
+  margin: 8px 0 16px;
+}
+.pill-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
 .topbar-actions {
   margin-left: auto;
   display: flex;
@@ -755,7 +760,7 @@ button:disabled {
 }
 .binder-summary {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 8px;
   border: 1.5px solid #51ab7a;
   border-radius: 16px;
@@ -1537,22 +1542,48 @@ button:disabled {
   border: 0;
 }
 @keyframes flash-feedback-appear {
-  from { opacity: 0; transform: scale(0.94); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 @keyframes flash-card-success {
-  0%, 100% { transform: translateY(0); }
-  45% { transform: translateY(-8px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  45% {
+    transform: translateY(-8px);
+  }
 }
 @keyframes flash-card-retry {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-5px); }
-  50% { transform: translateX(5px); }
-  75% { transform: translateX(-3px); }
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  50% {
+    transform: translateX(5px);
+  }
+  75% {
+    transform: translateX(-3px);
+  }
 }
 @keyframes flash-sparkles-pop {
-  from { opacity: 0; transform: translateY(10px) scale(0.7); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.7);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 .flip-hint {
   align-self: center;
