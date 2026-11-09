@@ -43,6 +43,7 @@ export const getApiStudySets = () => apiFetch<ApiStudySet[]>("/study-sets/");
 export const getApiStudySet = (id: number) => apiFetch<ApiStudySet>(`/study-sets/${id}/`);
 export const createApiStudySet = (data: FormData) => apiFetch<ApiStudySet>("/study-sets/", { method: "POST", body: data });
 export const updateApiStudySet = (id: number, data: FormData) => apiFetch<ApiStudySet>(`/study-sets/${id}/`, { method: "PATCH", body: data });
+export const deleteApiStudySet = (id: number) => apiFetch<void>(`/study-sets/${id}/`, { method: "DELETE" });
 export const generateApiStudySet = (id: number) => apiFetch<ApiStudySet>(`/study-sets/${id}/generate/`, { method: "POST" });
 export type ApiQuizAttempt = {
   id: number;

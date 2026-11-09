@@ -163,6 +163,18 @@ class StudySetApiTests(TestCase):
         self.client.force_authenticate(user=None)
         self.assertEqual(self.client.get("/api/study-sets/").status_code, 401)
 
+    def test_delete_study_set_is_owner_scoped(self):
+        own_set = StudySet.objects.create(owner=self.owner, subject=self.subject, title="Cells")
+        other_set = StudySet.objects.create(owner=self.other, subject=self.other_subject, title="Atoms")
+        own_url = f"/api/study-sets/{own_set.pk}/"
+        other_url = f"/api/study-sets/{other_set.pk}/"
+        self.assertEqual(self.client.delete(other_url).status_code, 404)
+        self.assertTrue(StudySet.objects.filter(pk=other_set.pk).exists())
+        self.assertEqual(self.client.delete(own_url).status_code, 204)
+        self.assertFalse(StudySet.objects.filter(pk=own_set.pk).exists())
+        self.client.force_authenticate(user=None)
+        self.assertEqual(self.client.delete(other_url).status_code, 401)
+
     def test_flashcard_progress_is_saved_and_scoped_to_owner(self):
         study_set = StudySet.objects.create(owner=self.owner, subject=self.subject, title="Cells")
         card = Flashcard.objects.create(study_set=study_set, front="Cell?", back="Unit of life")

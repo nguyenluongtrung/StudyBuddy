@@ -2,9 +2,15 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useStudySets } from "@/components/classroom/useStudySets";
-import { studySetPath } from "@/lib/api/study-sets";
+import {
+  deleteApiStudySet,
+  isApiSetId,
+  serverSetId,
+  studySetPath,
+} from "@/lib/api/study-sets";
+import { clearLocalStudySetData } from "@/lib/study-data";
 
 export default function StudySetsPage() {
   return (
@@ -15,10 +21,49 @@ export default function StudySetsPage() {
 }
 
 function StudySetsContent() {
-  const { sets, loading, apiError } = useStudySets();
+  const { sets, updateSets, loading, apiError } = useStudySets();
   const query = useSearchParams().get("q")?.toLowerCase() || "";
   const [subject, setSubject] = useState("All Subjects");
   const [sort, setSort] = useState("Recently Updated");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState("");
+  const [pendingDelete, setPendingDelete] = useState<{
+    id: string;
+    title: string;
+  } | null>(null);
+  const deleteDialogRef = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    if (pendingDelete && !deleteDialogRef.current?.open)
+      deleteDialogRef.current?.showModal();
+  }, [pendingDelete]);
+  function closeDeleteDialog() {
+    if (deletingId) return;
+    deleteDialogRef.current?.close();
+  }
+  async function deleteSet() {
+    if (!pendingDelete) return;
+    const setId = pendingDelete.id;
+    setDeletingId(setId);
+    setDeleteError("");
+    try {
+      if (isApiSetId(setId)) {
+        await deleteApiStudySet(serverSetId(setId));
+        window.dispatchEvent(new Event("studybuddy:api-sets"));
+      } else {
+        updateSets(sets.filter((item) => item.id !== setId));
+        clearLocalStudySetData(setId);
+      }
+      deleteDialogRef.current?.close();
+    } catch (error) {
+      setDeleteError(
+        error instanceof Error
+          ? error.message
+          : "Unable to delete this study set.",
+      );
+    } finally {
+      setDeletingId(null);
+    }
+  }
   const subjects = [
     "All Subjects",
     ...Array.from(new Set(sets.map((set) => set.subject))),
@@ -119,6 +164,18 @@ function StudySetsContent() {
                           : "Generating"}
                     </span>
                   )}
+                  <button
+                    className="binder-delete"
+                    type="button"
+                    disabled={deletingId !== null}
+                    onClick={() => {
+                      setDeleteError("");
+                      setPendingDelete({ id: set.id, title: set.title });
+                    }}
+                    aria-label={`Delete ${set.title}`}
+                  >
+                    {deletingId === set.id ? "Deleting…" : "Delete"}
+                  </button>
                 </div>
                 <div className="binder-card-title">
                   <div className="cover-thumb" aria-hidden="true">
@@ -181,6 +238,50 @@ function StudySetsContent() {
           )}
         </>
       )}
+      <dialog
+        className="delete-set-dialog"
+        ref={deleteDialogRef}
+        aria-labelledby="delete-set-title"
+        aria-describedby="delete-set-description"
+        onCancel={(event) => {
+          if (deletingId) event.preventDefault();
+        }}
+        onClose={() => setPendingDelete(null)}
+      >
+        {pendingDelete && (
+          <>
+            <h2 id="delete-set-title">Delete this study set?</h2>
+            <p id="delete-set-description">
+              <strong>{pendingDelete.title}</strong> and its quiz attempts and
+              flashcard progress will be permanently removed.
+            </p>
+            {deleteError && (
+              <p className="form-error" role="alert">
+                {deleteError}
+              </p>
+            )}
+            <div className="delete-set-dialog-actions">
+              <button
+                className="pill-button light"
+                type="button"
+                onClick={closeDeleteDialog}
+                disabled={deletingId !== null}
+                autoFocus
+              >
+                Keep set
+              </button>
+              <button
+                className="pill-button delete-confirm"
+                type="button"
+                onClick={deleteSet}
+                disabled={deletingId !== null}
+              >
+                {deletingId ? "Deleting…" : "Delete study set"}
+              </button>
+            </div>
+          </>
+        )}
+      </dialog>
     </div>
   );
 }

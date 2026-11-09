@@ -38,7 +38,7 @@ def serialize_attempt(attempt):
 
 
 class StudySetViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.CreateModelMixin,
-                      mixins.UpdateModelMixin, viewsets.GenericViewSet):
+                      mixins.UpdateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
     serializer_class = StudySetSerializer
     parser_classes = (JSONParser, FormParser, MultiPartParser)
 

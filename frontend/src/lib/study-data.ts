@@ -37,6 +37,11 @@ export function readSets(): StudySet[] {
   try { const saved = localStorage.getItem(userKey(setsKey)); return saved ? JSON.parse(saved) as StudySet[] : []; } catch { return []; }
 }
 export function saveSets(sets: StudySet[]) { localStorage.setItem(userKey(setsKey), JSON.stringify(sets)); window.dispatchEvent(new Event("studybuddy:sets")); }
+export function clearLocalStudySetData(setId: string) {
+  localStorage.removeItem(`${userKey(resultKey)}.${setId}`);
+  localStorage.removeItem(`${userKey(flashcardProgressKey)}.${setId}`);
+  sessionStorage.removeItem(`studybuddy.quizConfig.${setId}`);
+}
 export function saveResult(result: QuizResult) { localStorage.setItem(`${userKey(resultKey)}.${result.setId}`, JSON.stringify(result)); }
 export function readResult(setId: string): QuizResult | null {
   if (typeof window === "undefined") return null;
