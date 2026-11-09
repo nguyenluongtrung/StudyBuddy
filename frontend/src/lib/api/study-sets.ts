@@ -17,7 +17,7 @@ export type ApiStudySet = {
   updated_at: string;
   materials: { id: number; title: string; kind: "text" | "file"; content: string; extracted_text: string; download_url: string | null }[];
   flashcards: { id: number; front: string; back: string }[];
-  questions: { id: number; question: string; answers: string[]; correct: number; explanation: string }[];
+  questions: { id: number; question: string }[];
 };
 
 export const apiSetId = (id: number) => `api-${id}`;
@@ -43,7 +43,35 @@ export const getApiStudySets = () => apiFetch<ApiStudySet[]>("/study-sets/");
 export const getApiStudySet = (id: number) => apiFetch<ApiStudySet>(`/study-sets/${id}/`);
 export const createApiStudySet = (data: FormData) => apiFetch<ApiStudySet>("/study-sets/", { method: "POST", body: data });
 export const updateApiStudySet = (id: number, data: FormData) => apiFetch<ApiStudySet>(`/study-sets/${id}/`, { method: "PATCH", body: data });
+export const deleteApiStudySet = (id: number) => apiFetch<void>(`/study-sets/${id}/`, { method: "DELETE" });
 export const generateApiStudySet = (id: number) => apiFetch<ApiStudySet>(`/study-sets/${id}/generate/`, { method: "POST" });
+export type ApiQuizAttempt = {
+  id: number;
+  status: "in_progress" | "completed";
+  format: "multiple_choice" | "true_false" | "mixed";
+  count: number;
+  difficulty: number;
+  correct_count: number | null;
+  total_count: number | null;
+  score_percent: number | null;
+  completed_at: string | null;
+  questions: {
+    id: number; position: number; question: string; answers: string[];
+    selected_index: number | null; seconds_spent: number;
+    correct_index?: number; explanation?: string; is_correct?: boolean;
+  }[];
+};
+export type QuizSetup = { format: ApiQuizAttempt["format"]; count: number; difficulty: number };
+export const createQuizAttempt = (id: number, config: QuizSetup) =>
+  apiFetch<ApiQuizAttempt>(`/study-sets/${id}/quiz-attempts/`, { method: "POST", body: JSON.stringify(config) });
+export const getLatestQuizAttempt = (id: number) =>
+  apiFetch<ApiQuizAttempt | null>(`/study-sets/${id}/quiz-attempts/`);
+export const getQuizAttempt = (id: number, attemptId: number) =>
+  apiFetch<ApiQuizAttempt>(`/study-sets/${id}/quiz-attempts/${attemptId}/`);
+export const saveQuizAnswer = (id: number, attemptId: number, questionId: number, selectedIndex: number, secondsSpent: number) =>
+  apiFetch(`/study-sets/${id}/quiz-attempts/${attemptId}/answer/`, { method: "POST", body: JSON.stringify({ question_id: questionId, selected_index: selectedIndex, seconds_spent: secondsSpent }) });
+export const finishQuizAttempt = (id: number, attemptId: number) =>
+  apiFetch<ApiQuizAttempt>(`/study-sets/${id}/quiz-attempts/${attemptId}/finish/`, { method: "POST" });
 export type FlashcardProgress = { known_flashcard_ids: number[] };
 export const getFlashcardProgress = (id: number) => apiFetch<FlashcardProgress>(`/study-sets/${id}/flashcard-progress/`);
 export const saveFlashcardFeedback = (id: number, flashcardId: number, feedback: "known" | "learning") =>
@@ -59,7 +87,9 @@ export function toStudySet(value: ApiStudySet): StudySet {
     pastedNotes: value.materials.find((material) => material.kind === "text")?.content || "",
     fileName: value.materials.find((material) => material.kind === "file")?.title,
     fileDownloadUrl: value.materials.find((material) => material.kind === "file")?.download_url || undefined,
-    cards: value.flashcards, questions: value.questions, mastery: 0, updatedAt: value.updated_at,
+    cards: value.flashcards,
+    questions: value.questions.map((question) => ({ question: question.question, answers: [], correct: -1, explanation: "" })),
+    mastery: 0, updatedAt: value.updated_at,
     generationStatus: value.generation_status, generationError: value.generation_error,
     generateFlashcards: value.generate_flashcards, generateQuiz: value.generate_quiz,
   };

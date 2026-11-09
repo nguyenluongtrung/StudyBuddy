@@ -4,7 +4,19 @@ from rest_framework import serializers
 from apps.subjects.models import Subject
 
 from .extraction import MAX_SOURCE_CHARS, extract_upload
-from .models import StudyMaterial, StudySet
+from .models import Question, QuizAttempt, StudyMaterial, StudySet
+
+
+class QuizSetupSerializer(serializers.Serializer):
+    format = serializers.ChoiceField(choices=QuizAttempt.Format.choices)
+    count = serializers.IntegerField(min_value=1, max_value=50)
+    difficulty = serializers.ChoiceField(choices=Question.Difficulty.choices)
+
+
+class QuizAnswerSerializer(serializers.Serializer):
+    question_id = serializers.IntegerField(min_value=1)
+    selected_index = serializers.IntegerField(min_value=0)
+    seconds_spent = serializers.IntegerField(min_value=0, max_value=86400, default=0)
 
 
 class StudyMaterialSerializer(serializers.ModelSerializer):
@@ -42,8 +54,7 @@ class StudySetSerializer(serializers.ModelSerializer):
         return [{"id": card.id, "front": card.front, "back": card.back} for card in study_set.flashcards.all()]
 
     def get_questions(self, study_set):
-        return [{"id": question.id, "question": question.prompt, "answers": question.options,
-                 "correct": question.correct_index, "explanation": question.explanation}
+        return [{"id": question.id, "question": question.prompt}
                 for question in study_set.questions.all()]
 
     def validate_subject_id(self, subject):

@@ -163,6 +163,18 @@ class StudySetApiTests(TestCase):
         self.client.force_authenticate(user=None)
         self.assertEqual(self.client.get("/api/study-sets/").status_code, 401)
 
+    def test_delete_study_set_is_owner_scoped(self):
+        own_set = StudySet.objects.create(owner=self.owner, subject=self.subject, title="Cells")
+        other_set = StudySet.objects.create(owner=self.other, subject=self.other_subject, title="Atoms")
+        own_url = f"/api/study-sets/{own_set.pk}/"
+        other_url = f"/api/study-sets/{other_set.pk}/"
+        self.assertEqual(self.client.delete(other_url).status_code, 404)
+        self.assertTrue(StudySet.objects.filter(pk=other_set.pk).exists())
+        self.assertEqual(self.client.delete(own_url).status_code, 204)
+        self.assertFalse(StudySet.objects.filter(pk=own_set.pk).exists())
+        self.client.force_authenticate(user=None)
+        self.assertEqual(self.client.delete(other_url).status_code, 401)
+
     def test_flashcard_progress_is_saved_and_scoped_to_owner(self):
         study_set = StudySet.objects.create(owner=self.owner, subject=self.subject, title="Cells")
         card = Flashcard.objects.create(study_set=study_set, front="Cell?", back="Unit of life")
@@ -180,6 +192,51 @@ class StudySetApiTests(TestCase):
         self.assertEqual(FlashcardReview.objects.count(), 2)
         self.client.force_authenticate(self.other)
         self.assertEqual(self.client.get(url).status_code, 404)
+        self.client.force_authenticate(user=None)
+        self.assertEqual(self.client.get(url).status_code, 401)
+
+    def test_practice_quiz_lifecycle_and_owner_scope(self):
+        study_set = StudySet.objects.create(owner=self.owner, subject=self.subject, title="Cells")
+        question = Question.objects.create(
+            study_set=study_set, prompt="What is a cell?", question_type=Question.Type.MULTIPLE_CHOICE,
+            difficulty=Question.Difficulty.BALANCED, options=["Unit of life", "Atom"],
+            correct_index=0, explanation="Cells are units of life.",
+        )
+        url = f"/api/study-sets/{study_set.pk}/quiz-attempts/"
+        detail = self.client.get(f"/api/study-sets/{study_set.pk}/").data
+        self.assertNotIn("correct", str(detail["questions"]))
+        self.assertEqual(self.client.post(url, {"format": "mixed", "count": 0, "difficulty": 2}).status_code, 400)
+        created = self.client.post(url, {"format": "true_false", "count": 5, "difficulty": 1})
+        self.assertEqual(created.status_code, 201)
+        self.assertEqual(len(created.data["questions"]), 1)
+        self.assertEqual(created.data["questions"][0]["answers"], ["True", "False"])
+        self.assertNotIn("correct_index", created.data["questions"][0])
+        attempt_id = created.data["id"]
+        item_id = created.data["questions"][0]["id"]
+        attempt_url = f"{url}{attempt_id}/"
+        self.assertEqual(self.client.post(f"{attempt_url}finish/").status_code, 400)
+        self.assertEqual(self.client.post(f"{attempt_url}answer/", {
+            "question_id": item_id, "selected_index": 2,
+        }).status_code, 400)
+        self.assertEqual(self.client.post(f"{attempt_url}answer/", {
+            "question_id": item_id, "selected_index": 0, "seconds_spent": 12,
+        }).status_code, 200)
+        self.assertNotIn("correct_index", self.client.get(attempt_url).data["questions"][0])
+        finished = self.client.post(f"{attempt_url}finish/")
+        self.assertEqual(finished.status_code, 200)
+        self.assertEqual(finished.data["correct_count"], 1)
+        self.assertEqual(finished.data["questions"][0]["explanation"], question.explanation)
+        self.assertEqual(self.client.post(f"{attempt_url}answer/", {
+            "question_id": item_id, "selected_index": 1,
+        }).status_code, 400)
+        self.assertEqual(self.client.get(url).data["id"], attempt_id)
+        multiple_choice = self.client.post(url, {"format": "multiple_choice", "count": 1, "difficulty": 3})
+        self.assertEqual(multiple_choice.status_code, 201)
+        self.assertEqual(multiple_choice.data["questions"][0]["answers"], ["Unit of life", "Atom"])
+        self.assertEqual(self.client.get(url).data["id"], multiple_choice.data["id"])
+        self.client.force_authenticate(self.other)
+        self.assertEqual(self.client.get(url).status_code, 404)
+        self.assertEqual(self.client.get(attempt_url).status_code, 404)
         self.client.force_authenticate(user=None)
         self.assertEqual(self.client.get(url).status_code, 401)
 

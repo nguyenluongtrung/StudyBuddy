@@ -5,8 +5,10 @@ import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useStudySets } from "@/components/classroom/useStudySets";
 import {
+  createQuizAttempt,
   isApiSetId,
   normalizeStudySetId,
+  serverSetId,
   studySetPath,
 } from "@/lib/api/study-sets";
 
@@ -46,6 +48,29 @@ export default function QuizSetupPage() {
   const [format, setFormat] = useState(2);
   const [length, setLength] = useState(1);
   const [level, setLevel] = useState(1);
+  const [starting, setStarting] = useState(false);
+  const [startError, setStartError] = useState("");
+  async function startQuiz() {
+    setStarting(true);
+    setStartError("");
+    try {
+      const config = { format, count: [5, 10, 15][length], level };
+      sessionStorage.setItem(`studybuddy.quizConfig.${id}`, JSON.stringify(config));
+      sessionStorage.removeItem(`studybuddy.quizAttempt.${id}`);
+      if (isApiSetId(id)) {
+        const attempt = await createQuizAttempt(serverSetId(id), {
+          format: (["multiple_choice", "true_false", "mixed"] as const)[format],
+          count: config.count,
+          difficulty: level + 1,
+        });
+        sessionStorage.setItem(`studybuddy.quizAttempt.${id}`, String(attempt.id));
+      }
+      router.push(`${studySetPath(id)}/quiz`);
+    } catch (error) {
+      setStartError(error instanceof Error ? error.message : "Unable to start this quiz.");
+      setStarting(false);
+    }
+  }
   if (!set && !loading && apiError && isApiSetId(id))
     return (
       <div className="empty-state" role="alert">
@@ -129,17 +154,14 @@ export default function QuizSetupPage() {
         </Link>
         <button
           className="pill-button dark"
-          onClick={() => {
-            sessionStorage.setItem(
-              `studybuddy.quizConfig.${id}`,
-              JSON.stringify({ format, count: [5, 10, 15][length], level }),
-            );
-            router.push(`${studySetPath(id)}/quiz`);
-          }}
+          disabled={starting || set.questions.length === 0}
+          onClick={startQuiz}
         >
-          🚀 Generate & Start Quiz →
+          {starting ? "Starting quiz…" : "Start practice quiz →"}
         </button>
       </div>
+      {startError && <p className="form-error" role="alert">{startError}</p>}
+      {set.questions.length === 0 && <p className="form-error">Generate quiz questions for this study set before starting.</p>}
     </div>
   );
 }
