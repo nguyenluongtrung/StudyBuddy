@@ -42,6 +42,8 @@ Open:
 3. Send the access token as `Authorization: Bearer <token>`.
 4. Use `/api/subjects/` for user-owned subjects. Create a study set with multipart `POST /api/study-sets/`, then call `POST /api/study-sets/{id}/generate/`. The API also supports list, detail, update, and owner-only source-file downloads.
 
+Practice quizzes use `POST /api/study-sets/{id}/quiz-attempts/` with `{"format":"mixed","count":10,"difficulty":2}`. `GET` on that URL returns the latest attempt. `GET /api/study-sets/{id}/quiz-attempts/{attempt_id}/` resumes a specific attempt. Save each answer with `POST .../{attempt_id}/answer/` using `question_id`, `selected_index`, and optional `seconds_spent`, then `POST .../{attempt_id}/finish/`. Correct answers, explanations, and scores appear after completion. All routes require authentication and are scoped to the study set owner.
+
 ## Classroom UI
 
 The frontend opens at `/login`. After signing in, `/dashboard` links to the study set binder and the create, edit, flashcard, quiz, and results screens. The classroom design follows the supplied Stitch screenshots.

@@ -5,8 +5,10 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useStudySets } from "@/components/classroom/useStudySets";
 import {
+  getLatestQuizAttempt,
   isApiSetId,
   normalizeStudySetId,
+  serverSetId,
   studySetPath,
 } from "@/lib/api/study-sets";
 import {
@@ -24,9 +26,27 @@ export default function ResultsPage() {
   const [name, setName] = useState("");
   useEffect(() => {
     const update = () => {
-      setResult(readResult(id));
       setName(readActiveStudyUser());
-      setLoaded(true);
+      if (isApiSetId(id)) {
+        getLatestQuizAttempt(serverSetId(id)).then((attempt) => {
+          if (attempt?.status === "completed") {
+            setResult({
+              setId: id,
+              completedAt: attempt.completed_at || "",
+              questions: attempt.questions.map((item) => ({
+                question: item.question, answers: item.answers,
+                correct: item.correct_index ?? -1, explanation: item.explanation || "",
+              })),
+              answers: attempt.questions.map((item, questionIndex) => ({
+                questionIndex, selected: item.selected_index ?? -1, seconds: item.seconds_spent,
+              })),
+            });
+          } else setResult(null);
+        }).catch(() => setResult(null)).finally(() => setLoaded(true));
+      } else {
+        setResult(readResult(id));
+        setLoaded(true);
+      }
     };
     update();
     window.addEventListener("studybuddy:sets", update);
