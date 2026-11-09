@@ -20,6 +20,8 @@ cp frontend/.env.example frontend/.env
 docker compose up --build
 ```
 
+Set `GEMINI_API_KEY` in `backend/.env` before creating AI study activities. `GEMINI_MODEL` defaults to `gemini-3.5-flash-lite`. Keep the key on the backend only. Check your project's tier and limits in Google AI Studio; the model has free-tier input and output within those limits. Google's free-tier terms allow submitted content to be used to improve its products, so review that before uploading private notes.
+
 In another terminal, run the first migration and create an admin user:
 
 ```bash
@@ -38,13 +40,13 @@ Open:
 1. Register at `POST /api/users/register/`.
 2. Sign in at `POST /api/auth/token/` to receive access and refresh tokens.
 3. Send the access token as `Authorization: Bearer <token>`.
-4. Use `/api/subjects/` for user-owned subjects. Study sets and review history have database models; their API endpoints are not connected yet.
+4. Use `/api/subjects/` for user-owned subjects. Create a study set with multipart `POST /api/study-sets/`, then call `POST /api/study-sets/{id}/generate/`. The API also supports list, detail, update, and owner-only source-file downloads.
 
 ## Classroom UI
 
 The frontend opens at `/login`. After signing in, `/dashboard` links to the study set binder and the create, edit, flashcard, quiz, and results screens. The classroom design follows the supplied Stitch screenshots.
 
-The new study set flow is a frontend prototype. It starts with sample decks and stores each signed-in user's sets and latest quiz results in that browser's local storage. Paste notes or upload `.txt` and `.md` files to create cards and practice questions. PDF and slide import, Google SSO, and server persistence are not connected yet; the existing username/password sign-in still uses the Django API.
+New study sets are saved to the API and can combine pasted notes with one `.txt`, `.md`, `.pdf`, or `.pptx` file. Gemini generates flashcards and quiz questions after the set is saved; a failed generation can be retried from the set page. Existing browser-saved sets and local quiz results remain available without migration. Text extraction does not support scanned PDFs or OCR. The existing username/password sign-in uses the Django API.
 
 ## Project structure
 

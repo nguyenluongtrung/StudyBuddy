@@ -18,6 +18,17 @@ export function getAccessToken() {
   return sessionStorage.getItem(ACCESS_TOKEN_KEY) ?? localStorage.getItem(ACCESS_TOKEN_KEY);
 }
 
+export function getRefreshToken() {
+  if (typeof window === "undefined") return null;
+  return sessionStorage.getItem(REFRESH_TOKEN_KEY) ?? localStorage.getItem(REFRESH_TOKEN_KEY);
+}
+
+export function updateAccessToken(access: string) {
+  if (typeof window === "undefined") return;
+  const target = sessionStorage.getItem(REFRESH_TOKEN_KEY) ? sessionStorage : localStorage;
+  target.setItem(ACCESS_TOKEN_KEY, access);
+}
+
 export function clearTokens() {
   if (typeof window === "undefined") return;
   localStorage.removeItem(ACCESS_TOKEN_KEY);

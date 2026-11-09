@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { clearTokens } from "@/lib/auth/tokens";
+import { clearTokens, getAccessToken, getRefreshToken } from "@/lib/auth/tokens";
 import { getCurrentUser } from "@/lib/api/auth";
 import { clearActiveStudyUser, setActiveStudyUser } from "@/lib/study-data";
 
@@ -31,11 +31,40 @@ export function ClassroomShell({ children }: { children: React.ReactNode }) {
   const [search, setSearch] = useState("");
   const [showSearch, setShowSearch] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [authenticated, setAuthenticated] = useState(false);
+  const [authError, setAuthError] = useState("");
+  const [authAttempt, setAuthAttempt] = useState(0);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    getCurrentUser().then((user) => { setName(user.username); setActiveStudyUser(user.username); }).catch(() => undefined);
-  }, []);
+    let active = true;
+    setAuthenticated(false);
+    setAuthError("");
+    if (!getAccessToken() && !getRefreshToken()) {
+      clearActiveStudyUser();
+      router.replace(`/login?next=${encodeURIComponent(window.location.pathname + window.location.search)}`);
+      return;
+    }
+    getCurrentUser().then((user) => {
+      if (!active) return;
+      setName(user.username);
+      setActiveStudyUser(user.username);
+      setAuthenticated(true);
+      const canonicalPath = window.location.pathname.replace(/^\/study-sets\/api(?:[:-]|%3a)(\d+)(?=\/|$)/i, "/study-sets/$1");
+      if (canonicalPath !== window.location.pathname) router.replace(canonicalPath + window.location.search);
+    }).catch((error) => {
+      if (!active) return;
+      if (!(error instanceof Error) || error.message !== "Session expired. Sign in again.") {
+        setAuthError("Unable to check your session. Check your connection and try again.");
+        return;
+      }
+      clearTokens();
+      clearActiveStudyUser();
+      setAuthenticated(false);
+      router.replace(`/login?next=${encodeURIComponent(window.location.pathname + window.location.search)}`);
+    });
+    return () => { active = false; };
+  }, [pathname, router, authAttempt]);
 
   useEffect(() => { setMenuOpen(false); }, [pathname]);
 
@@ -70,8 +99,11 @@ export function ClassroomShell({ children }: { children: React.ReactNode }) {
     setMenuOpen(false);
     clearTokens();
     clearActiveStudyUser();
+    setAuthenticated(false);
     router.push("/login");
   }
+
+  if (!authenticated) return <div className="empty-state" role="status">{authError || "Checking your session…"}{authError && <button className="pill-button dark" onClick={() => setAuthAttempt((attempt) => attempt + 1)}>Retry</button>}</div>;
 
   return <div className="classroom-frame">
     <aside className="classroom-sidebar desktop-sidebar"><SidebarContent pathname={pathname} onSignOut={signOut} /></aside>

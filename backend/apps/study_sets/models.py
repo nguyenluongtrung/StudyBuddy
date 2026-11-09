@@ -16,11 +16,21 @@ class ValidatedModel(models.Model):
 
 
 class StudySet(ValidatedModel):
+    class GenerationStatus(models.TextChoices):
+        PENDING = "pending", "Pending"
+        READY = "ready", "Ready"
+        FAILED = "failed", "Failed"
+        OUTDATED = "outdated", "Outdated"
+
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="study_sets")
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name="study_sets")
     title = models.CharField(max_length=200)
     topic = models.CharField(max_length=120, blank=True)
     course_code = models.CharField(max_length=40, blank=True)
+    generate_flashcards = models.BooleanField(default=True)
+    generate_quiz = models.BooleanField(default=True)
+    generation_status = models.CharField(max_length=8, choices=GenerationStatus.choices, default=GenerationStatus.PENDING)
+    generation_error = models.CharField(max_length=255, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

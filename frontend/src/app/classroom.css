@@ -264,6 +264,41 @@ button:disabled {
   font-size: 12px;
   box-shadow: 3px 4px 0 #254d38;
 }
+
+.editor-section select {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid #d8d9d2;
+  border-radius: 10px;
+  background: white;
+  padding: 10px 14px;
+  font: inherit;
+}
+
+.selected-file {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 12px 0;
+}
+
+.selected-file button {
+  border: 0;
+  background: transparent;
+  color: #a6442f;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.generation-banner {
+  margin-bottom: 20px;
+  padding: 20px;
+}
+
+.generation-banner p { margin: 8px 0 16px; }
+.pill-button:disabled { opacity: .55; cursor: not-allowed; }
 .topbar-actions {
   margin-left: auto;
   display: flex;

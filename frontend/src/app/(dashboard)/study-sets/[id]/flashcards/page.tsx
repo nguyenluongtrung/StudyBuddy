@@ -4,12 +4,13 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useStudySets } from "@/components/classroom/useStudySets";
+import { isApiSetId, normalizeStudySetId, studySetPath } from "@/lib/api/study-sets";
 
 type Feedback = "learning" | "known" | null;
 
 export default function FlashcardsPage() {
-  const id = useParams<{ id: string }>().id;
-  const { sets } = useStudySets();
+  const id = normalizeStudySetId(useParams<{ id: string }>().id);
+  const { sets, loading, apiError } = useStudySets();
   const set = sets.find((item) => item.id === id);
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
@@ -42,8 +43,9 @@ export default function FlashcardsPage() {
 
   useEffect(() => () => { if (advanceTimer.current !== null) window.clearTimeout(advanceTimer.current); }, []);
 
-  if (!set) return <div className="empty-state">Study set not found. <Link href="/study-sets">Back to my study sets</Link></div>;
-  if (set.cards.length === 0) return <div className="empty-state">This study set has no flashcards yet. <Link href={`/study-sets/${id}/edit`}>Add notes</Link></div>;
+  if (!set && !loading && apiError && isApiSetId(id)) return <div className="empty-state" role="alert">{apiError}</div>;
+  if (!set) return <div className="empty-state">{loading ? "Loading study set…" : <>Study set not found. <Link href="/study-sets">Back to my study sets</Link></>}</div>;
+  if (set.cards.length === 0) return <div className="empty-state">This study set has no flashcards yet. <Link href={`${studySetPath(id)}/edit`}>Add notes</Link></div>;
 
   const card = set.cards[index];
   const cardCount = set.cards.length;
@@ -72,7 +74,7 @@ export default function FlashcardsPage() {
 
   return <div className="flashcards-page">
     <div className="flashcards-topline">
-      <div><p className="crumbs">{set.subject} / <span className="badge mint">{set.course} Practice</span></p><Link className="pill-button light" href={`/study-sets/${id}`}>← Back to Deck</Link><strong> / {set.course} Practice</strong></div>
+      <div><p className="crumbs">{set.subject} / <span className="badge mint">{set.course} Practice</span></p><Link className="pill-button light" href={`${studySetPath(id)}`}>← Back to Deck</Link><strong> / {set.course} Practice</strong></div>
       <div className="flash-progress"><strong>Card {index + 1} of {cardCount} · {Math.round(((index + 1) / cardCount) * 100)}%</strong><div className="progress-track"><i style={{ width: `${((index + 1) / cardCount) * 100}%` }} /></div></div>
     </div>
     <div className="flashcards-layout">

@@ -47,7 +47,8 @@ export default function LoginPage() {
             setBusy(true);
             try {
               await login(username, password, remember);
-              router.push("/dashboard");
+              const next = new URLSearchParams(window.location.search).get("next");
+              router.replace(next?.startsWith("/") && !next.startsWith("//") ? next : "/dashboard");
             } catch (err) {
               setError(
                 err instanceof Error ? err.message : "Unable to sign in",

@@ -10,6 +10,15 @@ export type StudySet = {
   questions: QuizQuestion[];
   mastery: number;
   updatedAt: string;
+  subjectId?: number;
+  topic?: string;
+  pastedNotes?: string;
+  fileName?: string;
+  fileDownloadUrl?: string;
+  generationStatus?: "pending" | "ready" | "failed" | "outdated";
+  generationError?: string;
+  generateFlashcards?: boolean;
+  generateQuiz?: boolean;
 };
 export type QuizAnswer = { questionIndex: number; selected: number; seconds: number };
 export type QuizResult = { setId: string; answers: QuizAnswer[]; questions: QuizQuestion[]; completedAt: string };
