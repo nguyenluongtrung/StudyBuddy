@@ -6,17 +6,181 @@ import { Suspense, useMemo, useState } from "react";
 import { useStudySets } from "@/components/classroom/useStudySets";
 import { studySetPath } from "@/lib/api/study-sets";
 
-export default function StudySetsPage() { return <Suspense fallback={<div className="empty-state">Loading study setsâ€¦</div>}><StudySetsContent /></Suspense>; }
+export default function StudySetsPage() {
+  return (
+    <Suspense fallback={<div className="empty-state">Loading study sets…</div>}>
+      <StudySetsContent />
+    </Suspense>
+  );
+}
 
 function StudySetsContent() {
-  const { sets, apiError } = useStudySets();
+  const { sets, loading, apiError } = useStudySets();
   const query = useSearchParams().get("q")?.toLowerCase() || "";
   const [subject, setSubject] = useState("All Subjects");
-  const [sort, setSort] = useState("Recently Studied");
-  const subjects = ["All Subjects", ...Array.from(new Set(sets.map((set) => set.subject)))];
+  const [sort, setSort] = useState("Recently Updated");
+  const subjects = [
+    "All Subjects",
+    ...Array.from(new Set(sets.map((set) => set.subject))),
+  ];
   const filtered = useMemo(() => {
-    const matching = sets.filter((set) => (subject === "All Subjects" || set.subject === subject) && `${set.title} ${set.subject} ${set.course} ${set.notes}`.toLowerCase().includes(query));
-    return [...matching].sort((a, b) => sort === "Title" ? a.title.localeCompare(b.title) : new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+    const matching = sets.filter(
+      (set) =>
+        (subject === "All Subjects" || set.subject === subject) &&
+        `${set.title} ${set.subject} ${set.course} ${set.notes}`
+          .toLowerCase()
+          .includes(query),
+    );
+    return [...matching].sort((a, b) =>
+      sort === "Title"
+        ? a.title.localeCompare(b.title)
+        : new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
+    );
   }, [sets, subject, sort, query]);
-  return <div className="binder-page">{apiError && <div className="form-error" role="alert">Saved account sets could not be loaded: {apiError}</div>}<div className="binder-heading"><div><p className="crumbs">âœ§ Classroom âœ¦ / My Binder Collection <span className="badge yellow">âœ¦ Term 2</span></p><h1>My Study Sets <span>ðŸŽ’ âœ¨</span></h1><p>Organize, review, and master your university lecture packs with anime-grade focus!</p></div><div className="binder-controls"><div className="view-switch"><span>â–¦</span><span>â˜·</span></div><select aria-label="Sort study sets" value={sort} onChange={(event) => setSort(event.target.value)}><option>Recently Studied</option><option>Title</option></select><Link className="pill-button dark" href="/study-sets/new">âŠ• Create New Set âœ¨</Link></div></div><div className="binder-summary"><span><strong>{sets.length}</strong> Total Curated Decks</span><span><strong>{sets.reduce((total, set) => total + set.cards.length, 0)}</strong> Flashcards in Circulation</span><span><strong>82%</strong> Average Proficient Rank</span><span><strong>ðŸ”¥</strong> 5 Day Streak On Fire</span></div><div className="filter-row">{subjects.map((item) => <button key={item} className={`filter-chip ${item === subject ? "selected" : ""}`} onClick={() => setSubject(item)}>{item} ({item === "All Subjects" ? sets.length : sets.filter((set) => set.subject === item).length})</button>)}</div><div className="binder-grid">{filtered.map((set, index) => <article className="binder-card outlined-card" key={set.id}><div className="binder-tags"><span className="badge mint">{set.course} Â· {set.subject}</span><span className={`badge ${index === 2 ? "coral" : "yellow"}`}>{index === 2 ? "âš  Review Due" : index === 3 ? "âœ¦ New Deck" : "âœ¦ Mastered"}</span></div><div className="binder-card-title"><div className={`cover-thumb cover-${index}`}>{index === 0 ? "ðŸ§ " : index === 1 ? "ðŸ§¬" : index === 2 ? "âš—ï¸" : "ðŸ”¬"}</div><div><h2>{set.title}</h2><p>â–£ {set.cards.length} Cards <span>Â·</span> â–¤ {set.questions.length} Quizzes <span>Â·</span> Recently</p></div></div><div className="topic-tags"><span>#ActionPotentials</span><span>#StudyNotes</span></div><div className="mastery-meter"><div><strong>Mastery Level</strong><span>{set.mastery}% {set.mastery < 70 ? "Needs Review" : "Proficient"}</span></div><div className="progress-track"><i style={{ width: `${set.mastery}%` }} /></div></div><div className="binder-card-actions"><Link className="pill-button dark" href={`${studySetPath(set.id)}/quiz/setup`}>Practice Quiz ðŸš€</Link><Link className="pill-button light" href={`${studySetPath(set.id)}/flashcards`}>Flashcards â–£</Link></div><Link className="card-cover-link" href={`${studySetPath(set.id)}`} aria-label={`View ${set.title}`} /></article>)}<article className="binder-tip outlined-card"><span className="badge yellow">âœ¦ STUDY NOTE</span><h2>Senseiâ€™s Classroom Tip ðŸ’¡</h2><p>Spaced repetition is 3Ã— more effective when you alternate between flashcard recall and quiz problem-solving. Try doing 1 quiz after reviewing every 15 flashcards.</p></article><Link href="/study-sets/new" className="upload-card outlined-card"><span>â‡§</span><h2>Have Fresh Lecture Slides?</h2><p>Paste your notes to turn them into a study set.</p><b>Build a new pack â†’</b></Link></div>{filtered.length === 0 && <div className="empty-state">No study sets match this search. <Link href="/study-sets">Clear filters</Link></div>}</div>;
+
+  return (
+    <div className="binder-page">
+      {apiError && (
+        <div className="form-error" role="alert">
+          Saved account sets could not be loaded: {apiError}
+        </div>
+      )}
+      <div className="binder-heading">
+        <div>
+          <p className="crumbs">Classroom / My Study Sets</p>
+          <h1>My Study Sets</h1>
+          <p>Organize and review the study sets you create.</p>
+        </div>
+        <div className="binder-controls">
+          <select
+            aria-label="Sort study sets"
+            value={sort}
+            onChange={(event) => setSort(event.target.value)}
+          >
+            <option>Recently Updated</option>
+            <option>Title</option>
+          </select>
+          <Link className="pill-button dark" href="/study-sets/new">
+            Create New Set
+          </Link>
+        </div>
+      </div>
+      <div className="binder-summary">
+        <span>
+          <strong>{sets.length}</strong> Study Sets
+        </span>
+        <span>
+          <strong>
+            {sets.reduce((total, set) => total + set.cards.length, 0)}
+          </strong>{" "}
+          Flashcards
+        </span>
+        <span>
+          <strong>
+            {sets.reduce((total, set) => total + set.questions.length, 0)}
+          </strong>{" "}
+          Quiz Questions
+        </span>
+      </div>
+      {sets.length > 0 && (
+        <div className="filter-row">
+          {subjects.map((item) => (
+            <button
+              key={item}
+              className={`filter-chip ${item === subject ? "selected" : ""}`}
+              onClick={() => setSubject(item)}
+            >
+              {item} (
+              {item === "All Subjects"
+                ? sets.length
+                : sets.filter((set) => set.subject === item).length}
+              )
+            </button>
+          ))}
+        </div>
+      )}
+      {loading ? (
+        <div className="empty-state">Loading study sets…</div>
+      ) : (
+        <>
+          <div className="binder-grid">
+            {filtered.map((set) => (
+              <article className="binder-card outlined-card" key={set.id}>
+                <div className="binder-tags">
+                  <span className="badge mint">
+                    {set.course} · {set.subject}
+                  </span>
+                  {set.generationStatus && set.generationStatus !== "ready" && (
+                    <span className="badge yellow">
+                      {set.generationStatus === "failed"
+                        ? "Generation failed"
+                        : set.generationStatus === "outdated"
+                          ? "Update needed"
+                          : "Generating"}
+                    </span>
+                  )}
+                </div>
+                <div className="binder-card-title">
+                  <div className="cover-thumb" aria-hidden="true">
+                    {set.subject.slice(0, 1).toUpperCase()}
+                  </div>
+                  <div>
+                    <h2>{set.title}</h2>
+                    <p>
+                      {set.cards.length} Cards <span>·</span>{" "}
+                      {set.questions.length} Questions
+                    </p>
+                  </div>
+                </div>
+                {set.topic && (
+                  <div className="topic-tags">
+                    <span>{set.topic}</span>
+                  </div>
+                )}
+                <div className="binder-card-actions">
+                  <Link
+                    className="pill-button dark"
+                    href={studySetPath(set.id)}
+                  >
+                    View Set
+                  </Link>
+                  {set.questions.length > 0 && (
+                    <Link
+                      className="pill-button light"
+                      href={`${studySetPath(set.id)}/quiz/setup`}
+                    >
+                      Practice Quiz
+                    </Link>
+                  )}
+                  {set.cards.length > 0 && (
+                    <Link
+                      className="pill-button light"
+                      href={`${studySetPath(set.id)}/flashcards`}
+                    >
+                      Flashcards
+                    </Link>
+                  )}
+                </div>
+              </article>
+            ))}
+          </div>
+          {filtered.length === 0 && (
+            <div className="empty-state">
+              {sets.length === 0 ? (
+                <>
+                  You have no study sets yet.{" "}
+                  <Link href="/study-sets/new">Create your first set</Link>.
+                </>
+              ) : (
+                <>
+                  No study sets match this search.{" "}
+                  <Link href="/study-sets">Clear filters</Link>
+                </>
+              )}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
 }

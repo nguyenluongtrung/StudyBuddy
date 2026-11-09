@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { readSets, saveSets, seedSets, type StudySet } from "@/lib/study-data";
+import { readSets, saveSets, type StudySet } from "@/lib/study-data";
 import { getApiStudySets, isApiSetId, toStudySet } from "@/lib/api/study-sets";
 
 export function useStudySets() {
-  const [localSets, setLocalSets] = useState<StudySet[]>(seedSets);
+  const [localSets, setLocalSets] = useState<StudySet[]>([]);
   const [apiSets, setApiSets] = useState<StudySet[]>([]);
   const [loading, setLoading] = useState(true);
   const [apiError, setApiError] = useState("");

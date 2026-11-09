@@ -163,6 +163,26 @@ class StudySetApiTests(TestCase):
         self.client.force_authenticate(user=None)
         self.assertEqual(self.client.get("/api/study-sets/").status_code, 401)
 
+    def test_flashcard_progress_is_saved_and_scoped_to_owner(self):
+        study_set = StudySet.objects.create(owner=self.owner, subject=self.subject, title="Cells")
+        card = Flashcard.objects.create(study_set=study_set, front="Cell?", back="Unit of life")
+        other_set = StudySet.objects.create(owner=self.other, subject=self.other_subject, title="Atoms")
+        other_card = Flashcard.objects.create(study_set=other_set, front="Atom?", back="Matter")
+        url = f"/api/study-sets/{study_set.pk}/flashcard-progress/"
+
+        self.assertEqual(self.client.get(url).data["known_flashcard_ids"], [])
+        self.assertEqual(self.client.post(url, {"flashcard_id": other_card.pk, "feedback": "known"}).status_code, 400)
+        self.assertEqual(self.client.post(url, {"flashcard_id": card.pk, "feedback": "invalid"}).status_code, 400)
+        self.assertEqual(FlashcardReview.objects.count(), 0)
+        self.assertEqual(self.client.post(url, {"flashcard_id": card.pk, "feedback": "known"}).data["known_flashcard_ids"], [card.pk])
+        self.assertEqual(self.client.get(url).data["known_flashcard_ids"], [card.pk])
+        self.assertEqual(self.client.post(url, {"flashcard_id": card.pk, "feedback": "learning"}).data["known_flashcard_ids"], [])
+        self.assertEqual(FlashcardReview.objects.count(), 2)
+        self.client.force_authenticate(self.other)
+        self.assertEqual(self.client.get(url).status_code, 404)
+        self.client.force_authenticate(user=None)
+        self.assertEqual(self.client.get(url).status_code, 401)
+
     def test_combined_source_and_owner_filtered_detail(self):
         with TemporaryDirectory() as media_root, override_settings(MEDIA_ROOT=media_root):
             upload = SimpleUploadedFile("notes.md", b"Mitochondria make ATP.", content_type="text/markdown")
