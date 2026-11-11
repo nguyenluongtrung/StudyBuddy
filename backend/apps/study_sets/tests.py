@@ -90,7 +90,7 @@ class StudySetModelTests(TestCase):
     def test_quiz_scoring_and_historical_snapshot(self):
         question = self.question()
         attempt = QuizAttempt.objects.create(
-            study_set=self.study_set, requested_format=QuizAttempt.Format.MULTIPLE_CHOICE,
+            study_set=self.study_set, user=self.owner, requested_format=QuizAttempt.Format.MULTIPLE_CHOICE,
             requested_count=1, requested_difficulty=Question.Difficulty.FUNDAMENTAL,
         )
         item = attempt.add_question(question, position=0)
@@ -114,7 +114,7 @@ class StudySetModelTests(TestCase):
     def test_attempt_position_is_unique(self):
         question = self.question()
         attempt = QuizAttempt.objects.create(
-            study_set=self.study_set, requested_format=QuizAttempt.Format.MIXED,
+            study_set=self.study_set, user=self.owner, requested_format=QuizAttempt.Format.MIXED,
             requested_count=2, requested_difficulty=Question.Difficulty.BALANCED,
         )
         attempt.add_question(question, position=0)
@@ -124,8 +124,8 @@ class StudySetModelTests(TestCase):
 
     def test_flashcard_reviews_and_set_deletion_cascade(self):
         card = Flashcard.objects.create(study_set=self.study_set, front="Cell?", back="Unit of life")
-        first = FlashcardReviewSession.objects.create(study_set=self.study_set)
-        second = FlashcardReviewSession.objects.create(study_set=self.study_set)
+        first = FlashcardReviewSession.objects.create(study_set=self.study_set, user=self.owner)
+        second = FlashcardReviewSession.objects.create(study_set=self.study_set, user=self.owner)
         FlashcardReview.record(first, card, FlashcardReview.Feedback.LEARNING)
         FlashcardReview.record(second, card, FlashcardReview.Feedback.KNOWN)
         card.front = "Changed"
@@ -155,6 +155,49 @@ class StudySetApiTests(TestCase):
         self.client.force_authenticate(self.owner)
         self.form = {"title": "Cells", "subject_id": self.subject.pk, "notes": "Cells divide.",
                      "generate_flashcards": "true", "generate_quiz": "true"}
+
+    def test_invite_grants_read_and_practice_with_private_progress(self):
+        study_set = StudySet.objects.create(owner=self.owner, subject=self.subject, title="Cells")
+        card = Flashcard.objects.create(study_set=study_set, front="Cell?", back="Unit of life")
+        Question.objects.create(
+            study_set=study_set, prompt="What is a cell?", question_type=Question.Type.MULTIPLE_CHOICE,
+            difficulty=Question.Difficulty.BALANCED, options=["Unit of life", "Atom"],
+            correct_index=0, explanation="Cells are units of life.",
+        )
+        base = f"/api/study-sets/{study_set.pk}/"
+        share_url = f"{base}share-code/"
+        join_url = "/api/study-sets/join/"
+        self.assertEqual(self.client.get(share_url).data["code"], None)
+        code = self.client.post(share_url).data["code"]
+        self.assertEqual(len(code), 12)
+        self.assertEqual(self.client.post(share_url).data["code"], code)
+        self.client.force_authenticate(self.other)
+        self.assertEqual(self.client.get(base).status_code, 404)
+        self.assertEqual(self.client.post(share_url).status_code, 404)
+        self.assertEqual(self.client.post(join_url, {"code": "bad-code"}).status_code, 400)
+        formatted_code = f"{code[:4]}-{code[4:8]}-{code[8:]}"
+        self.assertEqual(self.client.post(join_url, {"code": formatted_code.lower()}).status_code, 200)
+        self.assertEqual(self.client.post(join_url, {"code": code}).status_code, 200)
+        self.assertEqual(self.client.get(base).data["is_owner"], False)
+        self.assertEqual(len(self.client.get("/api/study-sets/").data), 1)
+        self.assertEqual(self.client.patch(base, {"title": "Changed"}).status_code, 404)
+        self.assertEqual(self.client.delete(base).status_code, 404)
+        self.assertEqual(self.client.post(f"{base}generate/").status_code, 404)
+        progress_url = f"{base}flashcard-progress/"
+        self.assertEqual(self.client.post(progress_url, {"flashcard_id": card.id, "feedback": "known"}).data["known_flashcard_ids"], [card.id])
+        quiz_url = f"{base}quiz-attempts/"
+        friend_attempt = self.client.post(quiz_url, {"format": "mixed", "count": 1, "difficulty": 2})
+        self.assertEqual(friend_attempt.status_code, 201)
+        self.client.force_authenticate(self.owner)
+        self.assertEqual(self.client.get(progress_url).data["known_flashcard_ids"], [])
+        self.assertIsNone(self.client.get(quiz_url).data)
+        self.assertEqual(self.client.get(f"{quiz_url}{friend_attempt.data['id']}/").status_code, 404)
+        self.assertEqual(self.client.delete(share_url).status_code, 204)
+        self.client.force_authenticate(self.other)
+        self.assertEqual(self.client.get(base).status_code, 200)
+        newcomer = get_user_model().objects.create_user(username="newcomer", password="test-password")
+        self.client.force_authenticate(newcomer)
+        self.assertEqual(self.client.post(join_url, {"code": code}).status_code, 400)
 
     def test_authentication_and_subject_ownership(self):
         response = self.client.post("/api/study-sets/", {**self.form, "subject_id": self.other_subject.pk})
@@ -273,7 +316,11 @@ class StudySetApiTests(TestCase):
             self.assertIn("Cell structure", StudySet.objects.get(pk=response.data["id"]).materials.get(kind="file").extracted_text)
             url = response.data["materials"][1]["download_url"]
             self.assertEqual(self.client.get(f"/api{url}").status_code, 200)
+            code = self.client.post(f"/api/study-sets/{response.data['id']}/share-code/").data["code"]
             self.client.force_authenticate(self.other)
+            self.assertEqual(self.client.post("/api/study-sets/join/", {"code": code}).status_code, 200)
+            shared = self.client.get(f"/api/study-sets/{response.data['id']}/").data
+            self.assertIsNone(shared["materials"][1]["download_url"])
             self.assertEqual(self.client.get(f"/api{url}").status_code, 404)
 
     def test_invalid_and_textless_pdf_uploads(self):

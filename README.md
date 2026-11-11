@@ -42,7 +42,9 @@ Open:
 3. Send the access token as `Authorization: Bearer <token>`.
 4. Use `/api/subjects/` for user-owned subjects. Create a study set with multipart `POST /api/study-sets/`, then call `POST /api/study-sets/{id}/generate/`. The API also supports list, detail, update, and owner-only source-file downloads.
 
-Practice quizzes use `POST /api/study-sets/{id}/quiz-attempts/` with `{"format":"mixed","count":10,"difficulty":2}`. `GET` on that URL returns the latest attempt. `GET /api/study-sets/{id}/quiz-attempts/{attempt_id}/` resumes a specific attempt. Save each answer with `POST .../{attempt_id}/answer/` using `question_id`, `selected_index`, and optional `seconds_spent`, then `POST .../{attempt_id}/finish/`. Correct answers, explanations, and scores appear after completion. All routes require authentication and are scoped to the study set owner.
+Practice quizzes use `POST /api/study-sets/{id}/quiz-attempts/` with `{"format":"mixed","count":10,"difficulty":2}`. `GET` on that URL returns the latest attempt. `GET /api/study-sets/{id}/quiz-attempts/{attempt_id}/` resumes a specific attempt. Save each answer with `POST .../{attempt_id}/answer/` using `question_id`, `selected_index`, and optional `seconds_spent`, then `POST .../{attempt_id}/finish/`. Correct answers, explanations, and scores appear after completion. All routes require authentication and are scoped to the participant taking the quiz.
+
+Owners can create a sharing code on a study set page. A signed-in friend enters the code at `/join` to add the set to their collection. Friends can read and practice the set, but cannot edit, delete, regenerate, or download its source file. Quiz attempts and flashcard progress are private to each participant. Owners can disable a code to stop new joins; existing participants keep access. Only API-backed sets can be shared.
 
 ## Classroom UI
 

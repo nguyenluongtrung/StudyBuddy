@@ -1,5 +1,8 @@
+import secrets
+
 from django.http import FileResponse, Http404
 from django.db import transaction
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
@@ -7,8 +10,11 @@ from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
 
 from .generation import GenerationFailed, generate_study_content, mark_generation_failed
-from .models import FlashcardReview, FlashcardReviewSession, Question, QuizAttempt, QuizAttemptQuestion, StudyMaterial, StudySet
+from .models import FlashcardReview, FlashcardReviewSession, Question, QuizAttempt, QuizAttemptQuestion, StudyMaterial, StudySet, StudySetParticipant
 from .serializers import QuizAnswerSerializer, QuizSetupSerializer, StudySetSerializer
+
+
+SHARE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 
 
 def serialize_attempt(attempt):
@@ -43,14 +49,49 @@ class StudySetViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.C
     parser_classes = (JSONParser, FormParser, MultiPartParser)
 
     def get_queryset(self):
-        return (StudySet.objects.filter(owner=self.request.user)
-                .select_related("subject").prefetch_related("materials", "flashcards", "questions"))
+        shared_actions = {"list", "retrieve", "quiz_attempts", "quiz_attempt", "quiz_answer", "quiz_finish", "flashcard_progress"}
+        access = Q(owner=self.request.user)
+        if self.action in shared_actions:
+            access |= Q(memberships__user=self.request.user)
+        return (StudySet.objects.filter(access).distinct()
+                .select_related("subject", "owner").prefetch_related("materials", "flashcards", "questions"))
+
+    @action(detail=True, methods=["get", "post", "delete"], url_path="share-code")
+    def share_code(self, request, pk=None):
+        study_set = self.get_object()
+        if request.method == "DELETE":
+            study_set.share_code = None
+            study_set.save(update_fields=["share_code"])
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        if request.method == "POST" and study_set.share_code is None:
+            while True:
+                code = "".join(secrets.choice(SHARE_ALPHABET) for _ in range(12))
+                if not StudySet.objects.filter(share_code=code).exists():
+                    study_set.share_code = code
+                    study_set.save(update_fields=["share_code"])
+                    break
+        return Response({"code": study_set.share_code})
+
+    @action(detail=False, methods=["post"], url_path="join")
+    def join(self, request):
+        supplied = request.data.get("code")
+        if not isinstance(supplied, str):
+            return Response({"detail": "Enter a valid sharing code."}, status=status.HTTP_400_BAD_REQUEST)
+        code = supplied.upper().replace("-", "").replace(" ", "").strip()
+        if len(code) != 12 or any(char not in SHARE_ALPHABET for char in code):
+            return Response({"detail": "Enter a valid sharing code."}, status=status.HTTP_400_BAD_REQUEST)
+        study_set = StudySet.objects.filter(share_code=code).first()
+        if study_set is None:
+            return Response({"detail": "This sharing code is invalid or disabled."}, status=status.HTTP_400_BAD_REQUEST)
+        if study_set.owner_id != request.user.id:
+            StudySetParticipant.objects.get_or_create(study_set=study_set, user=request.user)
+        return Response({"id": study_set.id})
 
     @action(detail=True, methods=["get", "post"], url_path="quiz-attempts")
     def quiz_attempts(self, request, pk=None):
         study_set = self.get_object()
         if request.method == "GET":
-            attempt = study_set.quiz_attempts.prefetch_related("items").first()
+            attempt = study_set.quiz_attempts.filter(user=request.user).prefetch_related("items").first()
             return Response(serialize_attempt(attempt) if attempt else None)
 
         serializer = QuizSetupSerializer(data=request.data)
@@ -70,7 +111,7 @@ class StudySetViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.C
         ))
         with transaction.atomic():
             attempt = QuizAttempt.objects.create(
-                study_set=study_set, requested_format=config["format"],
+                study_set=study_set, user=request.user, requested_format=config["format"],
                 requested_count=config["count"], requested_difficulty=config["difficulty"],
             )
             for position, question in enumerate(questions[:config["count"]]):
@@ -97,12 +138,12 @@ class StudySetViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.C
 
     @action(detail=True, methods=["get"], url_path=r"quiz-attempts/(?P<attempt_id>\d+)")
     def quiz_attempt(self, request, pk=None, attempt_id=None):
-        attempt = get_object_or_404(self.get_object().quiz_attempts.prefetch_related("items"), pk=attempt_id)
+        attempt = get_object_or_404(self.get_object().quiz_attempts.filter(user=request.user).prefetch_related("items"), pk=attempt_id)
         return Response(serialize_attempt(attempt))
 
     @action(detail=True, methods=["post"], url_path=r"quiz-attempts/(?P<attempt_id>\d+)/answer")
     def quiz_answer(self, request, pk=None, attempt_id=None):
-        attempt = get_object_or_404(self.get_object().quiz_attempts, pk=attempt_id)
+        attempt = get_object_or_404(self.get_object().quiz_attempts.filter(user=request.user), pk=attempt_id)
         serializer = QuizAnswerSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         if attempt.status != QuizAttempt.Status.IN_PROGRESS:
@@ -118,7 +159,7 @@ class StudySetViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.C
     @action(detail=True, methods=["post"], url_path=r"quiz-attempts/(?P<attempt_id>\d+)/finish")
     def quiz_finish(self, request, pk=None, attempt_id=None):
         with transaction.atomic():
-            attempt = get_object_or_404(self.get_object().quiz_attempts.select_for_update(), pk=attempt_id)
+            attempt = get_object_or_404(self.get_object().quiz_attempts.filter(user=request.user).select_for_update(), pk=attempt_id)
             if attempt.status != QuizAttempt.Status.IN_PROGRESS:
                 return Response({"detail": "This quiz is already complete."}, status=status.HTTP_400_BAD_REQUEST)
             if attempt.items.filter(selected_index__isnull=True).exists():
@@ -138,14 +179,14 @@ class StudySetViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.C
             if card is None:
                 return Response({"flashcard_id": ["Choose a flashcard in this study set."]}, status=status.HTTP_400_BAD_REQUEST)
             with transaction.atomic():
-                session = (FlashcardReviewSession.objects.filter(study_set=study_set, completed_at__isnull=True)
+                session = (FlashcardReviewSession.objects.filter(study_set=study_set, user=request.user, completed_at__isnull=True)
                            .order_by("-started_at", "-id").first())
                 if session is None:
-                    session = FlashcardReviewSession.objects.create(study_set=study_set)
+                    session = FlashcardReviewSession.objects.create(study_set=study_set, user=request.user)
                 FlashcardReview.record(session, card, feedback)
 
         latest = {}
-        reviews = (FlashcardReview.objects.filter(session__study_set=study_set, flashcard__study_set=study_set)
+        reviews = (FlashcardReview.objects.filter(session__study_set=study_set, session__user=request.user, flashcard__study_set=study_set)
                    .order_by("-reviewed_at", "-id").values_list("flashcard_id", "feedback"))
         for card_id, feedback in reviews:
             latest.setdefault(card_id, feedback)

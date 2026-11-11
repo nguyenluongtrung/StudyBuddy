@@ -1078,6 +1078,44 @@ button:disabled {
   font-size: 13px;
   color: #64806d;
 }
+.share-panel {
+  margin-top: 18px;
+  padding: 24px;
+  display: grid;
+  gap: 14px;
+}
+.share-panel h2 { margin: 0 0 6px; font-size: 20px; }
+.share-panel p { margin: 0; max-width: 65ch; color: #52685a; }
+.share-code-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.share-code-row input {
+  flex: 0 1 230px;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 2px solid var(--outline);
+  border-radius: 12px;
+  background: white;
+  color: #243a2c;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+.share-code-row input:focus-visible { outline: 3px solid #69cba2; outline-offset: 2px; }
+.share-panel .share-note { font-size: 13px; }
+.join-set-panel { max-width: 560px; padding: 28px; }
+.join-set-panel h1 { margin: 0 0 10px; }
+.join-set-panel > p { max-width: 46ch; color: #52685a; line-height: 1.5; }
+.join-set-panel form { display: grid; justify-items: start; gap: 12px; margin-top: 24px; }
+.join-set-panel label { font-weight: 800; }
+.join-set-panel input {
+  width: min(100%, 320px);
+  padding: 13px 15px;
+  border: 2px solid var(--outline);
+  border-radius: 12px;
+  font: inherit;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.join-set-panel input:focus-visible { outline: 3px solid #69cba2; outline-offset: 2px; }
 .recent-progress {
   border: 2px solid var(--outline);
   border-radius: 15px;

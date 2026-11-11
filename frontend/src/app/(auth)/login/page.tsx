@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { login } from "@/lib/api/auth";
 
@@ -13,6 +13,9 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [next, setNext] = useState("");
+  useEffect(() => { setNext(new URLSearchParams(window.location.search).get("next") || ""); }, []);
+  const registerHref = next ? `/register?next=${encodeURIComponent(next)}` : "/register";
   return (
     <main className="auth-scene">
       <div className="auth-deco star-one">★</div>
@@ -29,7 +32,7 @@ export default function LoginPage() {
             <small>ANIME CLASSROOM EDITION</small>
           </span>
         </Link>
-        <Link className="help-link" href="/register">
+        <Link className="help-link" href={registerHref}>
           Need help? 🚀
         </Link>
       </header>
@@ -118,7 +121,7 @@ export default function LoginPage() {
         </form>
         <p className="signup-line">
           Don’t have an account?{" "}
-          <Link href="/register">Sign up free for students ↗</Link>
+          <Link href={registerHref}>Sign up free for students ↗</Link>
         </p>
         <div className="login-trust">
           ⭐ &nbsp; A focused space for your next review

@@ -105,6 +105,7 @@ function StudySetsContent() {
             <option>Recently Updated</option>
             <option>Title</option>
           </select>
+          <Link className="pill-button light" href="/join">Join a study set</Link>
           <Link className="pill-button dark" href="/study-sets/new">
             Create New Set
           </Link>
@@ -164,7 +165,7 @@ function StudySetsContent() {
                           : "Generating"}
                     </span>
                   )}
-                  <button
+                  {(set.isOwner !== false) && <button
                     className="binder-delete"
                     type="button"
                     disabled={deletingId !== null}
@@ -175,7 +176,7 @@ function StudySetsContent() {
                     aria-label={`Delete ${set.title}`}
                   >
                     {deletingId === set.id ? "Deleting…" : "Delete"}
-                  </button>
+                  </button>}
                 </div>
                 <div className="binder-card-title">
                   <div className="cover-thumb" aria-hidden="true">
@@ -183,6 +184,7 @@ function StudySetsContent() {
                   </div>
                   <div>
                     <h2>{set.title}</h2>
+                    {set.isOwner === false && <p>Shared by {set.ownerName}</p>}
                     <p>
                       {set.cards.length} Cards <span>·</span>{" "}
                       {set.questions.length} Questions

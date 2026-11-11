@@ -30,6 +30,7 @@ export function StudySetEditor() {
   const [makeFlashcards, setMakeFlashcards] = useState(true);
   const [makeQuiz, setMakeQuiz] = useState(true);
   const [error, setError] = useState("");
+  const [accessDenied, setAccessDenied] = useState(false);
   const [busy, setBusy] = useState(false);
   const [phase, setPhase] = useState<"saving" | "generating" | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -46,6 +47,7 @@ export function StudySetEditor() {
   useEffect(() => {
     if (!id || !isApiSetId(id)) return;
     getApiStudySet(serverSetId(id)).then((data) => {
+      if (!data.is_owner) { setAccessDenied(true); return; }
       const set = toStudySet(data);
       setTitle(set.title); setSubjectId(String(set.subjectId)); setCourse(data.course_code);
       setTopic(data.topic); setNotes(set.pastedNotes || ""); setOriginalNotes(set.pastedNotes || ""); setStoredFile(set.fileName || "");
@@ -62,6 +64,7 @@ export function StudySetEditor() {
   }
 
   async function save() {
+    if (accessDenied) return;
     setError("");
     if (!title.trim() || (!notes.trim() && !file && !storedFile)) { setError("Add a title and notes or a file."); return; }
     if (!makeFlashcards && !makeQuiz) { setError("Select flashcards, a quiz, or both."); return; }
@@ -101,6 +104,7 @@ export function StudySetEditor() {
     finally { setBusy(false); setPhase(null); }
   }
 
+  if (accessDenied) return <div className="empty-state">Only the owner can edit this study set. <Link href={studySetPath(id!)}>Back to study set</Link></div>;
   return <div className="editor-page">
     <p className="crumbs"><Link href="/study-sets">My Study Sets</Link> / <span className="badge yellow">{id ? "Edit" : "New"} Study Set</span></p>
     <h1>{id ? "Edit Study Set" : "Create New Study Set"} <span>🌱</span></h1>
