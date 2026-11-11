@@ -2,13 +2,16 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useStudySets } from "@/components/classroom/useStudySets";
 import {
   downloadStudyMaterial,
+  createShareCode,
   generateApiStudySet,
+  getShareCode,
   isApiSetId,
   normalizeStudySetId,
+  revokeShareCode,
   serverSetId,
   studySetPath,
 } from "@/lib/api/study-sets";
@@ -19,6 +22,48 @@ export default function StudySetDetailsPage() {
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState("");
   const set = sets.find((item) => item.id === id);
+  const [shareCode, setShareCode] = useState<string | null>(null);
+  const [shareBusy, setShareBusy] = useState(false);
+  const [shareError, setShareError] = useState("");
+  const [copied, setCopied] = useState(false);
+  useEffect(() => {
+    if (!isApiSetId(id) || set?.isOwner !== true) return;
+    let active = true;
+    getShareCode(serverSetId(id)).then(({ code }) => {
+      if (active) setShareCode(code);
+    }).catch((error) => {
+      if (active) setShareError(error instanceof Error ? error.message : "Unable to load sharing details.");
+    });
+    return () => { active = false; };
+  }, [id, set?.isOwner]);
+  const displayCode = shareCode?.replace(/(.{4})(?=.)/g, "$1-") || "";
+  async function createCode() {
+    setShareBusy(true);
+    setShareError("");
+    try {
+      const { code } = await createShareCode(serverSetId(id));
+      setShareCode(code);
+    } catch (error) {
+      setShareError(error instanceof Error ? error.message : "Unable to create a sharing code.");
+    } finally { setShareBusy(false); }
+  }
+  async function revokeCode() {
+    setShareBusy(true);
+    setShareError("");
+    try {
+      await revokeShareCode(serverSetId(id));
+      setShareCode(null);
+      setCopied(false);
+    } catch (error) {
+      setShareError(error instanceof Error ? error.message : "Unable to disable this sharing code.");
+    } finally { setShareBusy(false); }
+  }
+  async function copyCode() {
+    try {
+      await navigator.clipboard.writeText(displayCode);
+      setCopied(true);
+    } catch { setShareError("Copy failed. Select the code and copy it manually."); }
+  }
   if (!set && loading)
     return <div className="empty-state">Loading study set…</div>;
   if (!set && apiError && isApiSetId(id))
@@ -71,7 +116,7 @@ export default function StudySetDetailsPage() {
   }
   return (
     <div className="detail-page">
-      {isApiSetId(id) && set.generationStatus !== "ready" && (
+      {isApiSetId(id) && set.isOwner !== false && set.generationStatus !== "ready" && (
         <section className="generation-banner outlined-card" role="status">
           <strong>
             {set.generationStatus === "failed"
@@ -105,9 +150,9 @@ export default function StudySetDetailsPage() {
           <strong>Current Set</strong>
         </p>
         <div>
-          <Link className="pill-button light" href={`${studySetPath(id)}/edit`}>
+          {set.isOwner !== false && <Link className="pill-button light" href={`${studySetPath(id)}/edit`}>
             Edit Set
-          </Link>
+          </Link>}
           {set.fileDownloadUrl && (
             <button className="pill-button light" onClick={download}>
               Download source
@@ -122,12 +167,28 @@ export default function StudySetDetailsPage() {
             <span className="badge light">Lecture Notes</span>
           </div>
           <h1>{set.title}</h1>
+          {set.isOwner === false && <p>Shared by {set.ownerName}</p>}
           <p>
             {set.cards.length} flashcards · {set.questions.length} quiz
             questions
           </p>
         </div>
       </section>
+      {isApiSetId(id) && set.isOwner === true && <section className="share-panel outlined-card">
+        <div>
+          <h2>Study with friends</h2>
+          <p>Give this code to a friend. They can enter it under Join a study set and practice with their own progress. Only you can edit it.</p>
+        </div>
+        {shareCode ? <div className="share-code-row">
+          <input aria-label="Sharing code" readOnly value={displayCode} onFocus={(event) => event.currentTarget.select()} />
+          <button className="pill-button dark" type="button" onClick={copyCode}>{copied ? "Copied" : "Copy code"}</button>
+          <button className="pill-button light" type="button" disabled={shareBusy} onClick={revokeCode}>Disable code</button>
+        </div> : <button className="pill-button dark" type="button" disabled={shareBusy} onClick={createCode}>
+          {shareBusy ? "Creating…" : "Create sharing code"}
+        </button>}
+        {shareError && <p className="form-error" role="alert">{shareError}</p>}
+        {shareCode && <p className="share-note">Disabling the code stops new joins. Friends who already joined keep access.</p>}
+      </section>}
       <div className="study-action-grid">
         <article className="study-action outlined-card">
           <div className="action-art quiz-art">

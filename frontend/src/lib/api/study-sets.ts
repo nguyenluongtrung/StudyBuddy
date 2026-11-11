@@ -8,6 +8,8 @@ export type ApiStudySet = {
   title: string;
   subject_id: number;
   subject_name: string;
+  is_owner: boolean;
+  owner_name: string;
   topic: string;
   course_code: string;
   generate_flashcards: boolean;
@@ -45,6 +47,10 @@ export const createApiStudySet = (data: FormData) => apiFetch<ApiStudySet>("/stu
 export const updateApiStudySet = (id: number, data: FormData) => apiFetch<ApiStudySet>(`/study-sets/${id}/`, { method: "PATCH", body: data });
 export const deleteApiStudySet = (id: number) => apiFetch<void>(`/study-sets/${id}/`, { method: "DELETE" });
 export const generateApiStudySet = (id: number) => apiFetch<ApiStudySet>(`/study-sets/${id}/generate/`, { method: "POST" });
+export const getShareCode = (id: number) => apiFetch<{ code: string | null }>(`/study-sets/${id}/share-code/`);
+export const createShareCode = (id: number) => apiFetch<{ code: string }>(`/study-sets/${id}/share-code/`, { method: "POST" });
+export const revokeShareCode = (id: number) => apiFetch<void>(`/study-sets/${id}/share-code/`, { method: "DELETE" });
+export const joinSharedSet = (code: string) => apiFetch<{ id: number }>(`/study-sets/join/`, { method: "POST", body: JSON.stringify({ code }) });
 export type ApiQuizAttempt = {
   id: number;
   status: "in_progress" | "completed";
@@ -82,6 +88,7 @@ export const saveFlashcardFeedback = (id: number, flashcardId: number, feedback:
 export function toStudySet(value: ApiStudySet): StudySet {
   return {
     id: apiSetId(value.id), title: value.title, subject: value.subject_name,
+    isOwner: value.is_owner, ownerName: value.owner_name,
     subjectId: value.subject_id, course: value.course_code || "STUDY", topic: value.topic,
     notes: value.materials.map((material) => material.extracted_text).filter(Boolean).join("\n\n"),
     pastedNotes: value.materials.find((material) => material.kind === "text")?.content || "",

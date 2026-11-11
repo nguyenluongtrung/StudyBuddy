@@ -23,6 +23,8 @@ class StudySet(ValidatedModel):
         OUTDATED = "outdated", "Outdated"
 
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="study_sets")
+    share_code = models.CharField(max_length=12, unique=True, null=True, blank=True, default=None)
+    participants = models.ManyToManyField(settings.AUTH_USER_MODEL, through="StudySetParticipant", related_name="shared_study_sets")
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name="study_sets")
     title = models.CharField(max_length=200)
     topic = models.CharField(max_length=120, blank=True)
@@ -44,6 +46,15 @@ class StudySet(ValidatedModel):
 
     def __str__(self):
         return self.title
+
+
+class StudySetParticipant(models.Model):
+    study_set = models.ForeignKey(StudySet, on_delete=models.CASCADE, related_name="memberships")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="study_set_memberships")
+    joined_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["study_set", "user"], name="unique_study_set_participant")]
 
 
 class StudyMaterial(ValidatedModel):
@@ -177,6 +188,7 @@ class QuizAttempt(ValidatedModel):
         COMPLETED = "completed", "Completed"
 
     study_set = models.ForeignKey(StudySet, on_delete=models.CASCADE, related_name="quiz_attempts")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="quiz_attempts")
     requested_format = models.CharField(max_length=20, choices=Format.choices)
     requested_count = models.PositiveSmallIntegerField()
     requested_difficulty = models.PositiveSmallIntegerField(choices=Question.Difficulty.choices)
@@ -271,6 +283,7 @@ class QuizAttemptQuestion(ValidatedModel):
 
 class FlashcardReviewSession(ValidatedModel):
     study_set = models.ForeignKey(StudySet, on_delete=models.CASCADE, related_name="flashcard_sessions")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="flashcard_sessions")
     started_at = models.DateTimeField(default=timezone.now)
     completed_at = models.DateTimeField(null=True, blank=True)
 

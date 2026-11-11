@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { register } from "@/lib/api/auth";
 
@@ -10,6 +10,9 @@ export default function RegisterPage() {
   const [form, setForm] = useState({ username: "", email: "", password: "" });
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [next, setNext] = useState("");
+  useEffect(() => { setNext(new URLSearchParams(window.location.search).get("next") || ""); }, []);
+  const loginHref = next ? `/login?next=${encodeURIComponent(next)}` : "/login";
   return (
     <main className="auth-scene">
       <header className="auth-header">
@@ -22,7 +25,7 @@ export default function RegisterPage() {
             <small>ANIME CLASSROOM EDITION</small>
           </span>
         </Link>
-        <Link className="help-link" href="/login">
+        <Link className="help-link" href={loginHref}>
           Back to sign in ↗
         </Link>
       </header>
@@ -42,7 +45,7 @@ export default function RegisterPage() {
             setBusy(true);
             try {
               await register(form.username, form.email, form.password);
-              router.push("/login");
+              router.push(loginHref);
             } catch (err) {
               setError(
                 err instanceof Error ? err.message : "Unable to register",
@@ -113,7 +116,7 @@ export default function RegisterPage() {
           </button>
         </form>
         <p className="signup-line">
-          Already have an account? <Link href="/login">Sign in ↗</Link>
+          Already have an account? <Link href={loginHref}>Sign in ↗</Link>
         </p>
       </section>
     </main>

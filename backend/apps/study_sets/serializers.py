@@ -27,12 +27,14 @@ class StudyMaterialSerializer(serializers.ModelSerializer):
         fields = ("id", "title", "kind", "content", "extracted_text", "status", "created_at", "download_url")
 
     def get_download_url(self, material):
-        if material.file:
+        if material.file and self.context["request"].user.id == material.study_set.owner_id:
             return f"/study-sets/{material.study_set_id}/materials/{material.id}/download/"
         return None
 
 
 class StudySetSerializer(serializers.ModelSerializer):
+    is_owner = serializers.SerializerMethodField()
+    owner_name = serializers.CharField(source="owner.username", read_only=True)
     subject_id = serializers.PrimaryKeyRelatedField(source="subject", queryset=Subject.objects.all())
     subject_name = serializers.CharField(source="subject.name", read_only=True)
     notes = serializers.CharField(write_only=True, required=False, allow_blank=True)
@@ -46,12 +48,15 @@ class StudySetSerializer(serializers.ModelSerializer):
         fields = (
             "id", "title", "subject_id", "subject_name", "topic", "course_code", "notes", "file",
             "generate_flashcards", "generate_quiz", "generation_status", "generation_error",
-            "created_at", "updated_at", "materials", "flashcards", "questions",
+            "created_at", "updated_at", "materials", "flashcards", "questions", "is_owner", "owner_name",
         )
         read_only_fields = ("id", "generation_status", "generation_error", "created_at", "updated_at")
 
     def get_flashcards(self, study_set):
         return [{"id": card.id, "front": card.front, "back": card.back} for card in study_set.flashcards.all()]
+
+    def get_is_owner(self, study_set):
+        return study_set.owner_id == self.context["request"].user.id
 
     def get_questions(self, study_set):
         return [{"id": question.id, "question": question.prompt}

@@ -11,6 +11,8 @@ export type StudySet = {
   mastery: number;
   updatedAt: string;
   subjectId?: number;
+  isOwner?: boolean;
+  ownerName?: string;
   topic?: string;
   pastedNotes?: string;
   fileName?: string;
