@@ -57,6 +57,17 @@ class StudySetParticipant(models.Model):
         constraints = [models.UniqueConstraint(fields=["study_set", "user"], name="unique_study_set_participant")]
 
 
+class ExamPlan(ValidatedModel):
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="exam_plans")
+    title = models.CharField(max_length=120)
+    exam_date = models.DateField()
+    study_sets = models.ManyToManyField(StudySet, related_name="exam_plans")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["exam_date", "id"]
+
+
 class StudyMaterial(ValidatedModel):
     class Kind(models.TextChoices):
         TEXT = "text", "Pasted text"

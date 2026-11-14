@@ -5,12 +5,15 @@ import { useEffect, useState } from "react";
 import { useStudySets } from "@/components/classroom/useStudySets";
 import { readActiveStudyUser, readLocalReviewQueue } from "@/lib/study-data";
 import { getReviewToday, isApiSetId, studySetPath } from "@/lib/api/study-sets";
+import { getExamPlans, type ExamPlan } from "@/lib/api/exam-plans";
 
 export default function DashboardPage() {
   const { sets, loading, apiError } = useStudySets();
   const [name, setName] = useState("");
   const [dueCount, setDueCount] = useState<number | null>(null);
   const [reviewError, setReviewError] = useState("");
+  const [examPlans, setExamPlans] = useState<ExamPlan[]>([]);
+  const [examPlanError, setExamPlanError] = useState(false);
   useEffect(() => {
     const update = () => setName(readActiveStudyUser());
     update();
@@ -31,10 +34,14 @@ export default function DashboardPage() {
     };
   }, []);
   const active = sets.slice(0, 3);
+  useEffect(() => {
+    getExamPlans().then(setExamPlans).catch(() => setExamPlanError(true));
+  }, []);
   const localDueCount = readLocalReviewQueue(
     sets.filter((set) => !isApiSetId(set.id)),
   ).length;
   const totalDueCount = dueCount === null ? null : dueCount + localDueCount;
+  const nextExam = examPlans.find((plan) => plan.daily_progress.days_left > 0);
 
   return (
     <div className="dashboard-page">
@@ -82,6 +89,16 @@ export default function DashboardPage() {
           <p>Questions to practice</p>
         </div>
       </div>
+      <section className="dashboard-exam-plan outlined-card" aria-label="Exam study plan">
+        <div>
+          <h2>{nextExam ? nextExam.title : examPlanError ? "Exam plans unavailable" : "Have an exam coming up?"}</h2>
+          {examPlanError ? <p>Open exam plans to try loading them again.</p> : nextExam ? (
+            <p>{nextExam.daily_progress.new_cards_today} of {nextExam.daily_progress.daily_goal} new cards studied today
+              {totalDueCount !== null ? ` · ${totalDueCount} cards in today’s review queue` : ""}</p>
+          ) : <p>Set an exam date and choose what to study each day.</p>}
+        </div>
+        <Link className="pill-button dark" href="/exam-plans">{nextExam || examPlanError ? "View plans" : "Create a plan"}</Link>
+      </section>
       <section>
         <div className="section-title">
           <h2>Continue Studying</h2>

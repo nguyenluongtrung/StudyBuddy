@@ -14,6 +14,7 @@ import { clearActiveStudyUser, setActiveStudyUser } from "@/lib/study-data";
 const navigationLinks = [
   { href: "/dashboard", icon: "▦", label: "Dashboard" },
   { href: "/study-sets", icon: "▣", label: "My Study Sets" },
+  { href: "/exam-plans", icon: "◷", label: "Exam Plans" },
   { href: "/progress", icon: "↗", label: "Progress" },
   { href: "/challenges", icon: "✦", label: "Challenges" },
   { href: "/profile", icon: "♙", label: "Profile" },
