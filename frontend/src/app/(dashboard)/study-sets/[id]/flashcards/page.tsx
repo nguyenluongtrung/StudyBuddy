@@ -12,7 +12,10 @@ import {
   serverSetId,
   studySetPath,
 } from "@/lib/api/study-sets";
-import { readLocalFlashcardProgress, saveLocalFlashcardProgress } from "@/lib/study-data";
+import {
+  readLocalFlashcardProgress,
+  saveLocalFlashcardFeedback,
+} from "@/lib/study-data";
 
 type Feedback = "learning" | "known" | null;
 
@@ -36,17 +39,36 @@ export default function FlashcardsPage() {
     setProgressError("");
     setKnown([]);
     if (isApiSetId(id)) {
-      getFlashcardProgress(serverSetId(id)).then((progress) => {
-        if (active) setKnown(set.cards.flatMap((card, cardIndex) =>
-          card.id !== undefined && progress.known_flashcard_ids.includes(card.id) ? [cardIndex] : []));
-      }).catch((error) => {
-        if (active) setProgressError(error instanceof Error ? error.message : "Unable to load flashcard progress.");
-      }).finally(() => { if (active) setProgressReady(true); });
+      getFlashcardProgress(serverSetId(id))
+        .then((progress) => {
+          if (active)
+            setKnown(
+              set.cards.flatMap((card, cardIndex) =>
+                card.id !== undefined &&
+                progress.known_flashcard_ids.includes(card.id)
+                  ? [cardIndex]
+                  : [],
+              ),
+            );
+        })
+        .catch((error) => {
+          if (active)
+            setProgressError(
+              error instanceof Error
+                ? error.message
+                : "Unable to load flashcard progress.",
+            );
+        })
+        .finally(() => {
+          if (active) setProgressReady(true);
+        });
     } else {
       setKnown(readLocalFlashcardProgress(set));
       setProgressReady(true);
     }
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [id, set]);
 
   useEffect(() => {
@@ -126,20 +148,34 @@ export default function FlashcardsPage() {
     try {
       let nextKnown: number[];
       if (isApiSetId(id)) {
-        if (card.id === undefined) throw new Error("This flashcard has no saved ID.");
-        const progress = await saveFlashcardFeedback(serverSetId(id), card.id, didKnow ? "known" : "learning");
+        if (card.id === undefined)
+          throw new Error("This flashcard has no saved ID.");
+        const progress = await saveFlashcardFeedback(
+          serverSetId(id),
+          card.id,
+          didKnow ? "known" : "learning",
+        );
         nextKnown = set.cards.flatMap((item, cardIndex) =>
-          item.id !== undefined && progress.known_flashcard_ids.includes(item.id) ? [cardIndex] : []);
+          item.id !== undefined &&
+          progress.known_flashcard_ids.includes(item.id)
+            ? [cardIndex]
+            : [],
+        );
       } else {
-        nextKnown = didKnow
-          ? known.includes(index) ? known : [...known, index]
-          : known.filter((cardIndex) => cardIndex !== index);
-        saveLocalFlashcardProgress(set, nextKnown);
+        nextKnown = saveLocalFlashcardFeedback(
+          set,
+          index,
+          didKnow ? "known" : "learning",
+        );
       }
       setKnown(nextKnown);
       setFeedback(didKnow ? "known" : "learning");
     } catch (error) {
-      setProgressError(error instanceof Error ? error.message : "Unable to save flashcard progress.");
+      setProgressError(
+        error instanceof Error
+          ? error.message
+          : "Unable to save flashcard progress.",
+      );
       transitioning.current = false;
       return;
     }
@@ -283,11 +319,14 @@ export default function FlashcardsPage() {
             </button>
           </div>
           <p className="flash-status" role="status" aria-live="polite">
-            {progressError || (!progressReady ? "Loading saved progress…" : feedback === "known"
-              ? "Got it! Moving to the next card."
-              : feedback === "learning"
-                ? "Keep practicing. Moving to the next card."
-                : "Progress saves when you rate a card.")}
+            {progressError ||
+              (!progressReady
+                ? "Loading saved progress…"
+                : feedback === "known"
+                  ? "Got it! Moving to the next card."
+                  : feedback === "learning"
+                    ? "Keep practicing. Moving to the next card."
+                    : "Progress saves when you rate a card.")}
           </p>
         </div>
         <aside className="flash-aside">

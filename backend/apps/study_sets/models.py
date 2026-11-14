@@ -355,3 +355,23 @@ class FlashcardReview(ValidatedModel):
             session=session, flashcard=flashcard, front=flashcard.front,
             back=flashcard.back, feedback=feedback,
         )
+
+
+class FlashcardSchedule(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="flashcard_schedules")
+    flashcard = models.ForeignKey(Flashcard, on_delete=models.CASCADE, related_name="schedules")
+    due_on = models.DateField()
+    known_streak = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["user", "flashcard"], name="unique_flashcard_schedule")]
+        indexes = [models.Index(fields=["user", "due_on"], name="flash_schedule_user_due_idx")]
+
+    def apply_feedback(self, feedback, today=None):
+        from datetime import timedelta
+
+        today = today or timezone.localdate()
+        self.known_streak = min(self.known_streak + 1, 4) if feedback == FlashcardReview.Feedback.KNOWN else 0
+        days = (3, 7, 14, 30)[self.known_streak - 1] if self.known_streak else 1
+        self.due_on = today + timedelta(days=days)
+        self.save(update_fields=["known_streak", "due_on"])

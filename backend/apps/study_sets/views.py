@@ -2,15 +2,16 @@ import secrets
 
 from django.http import FileResponse, Http404
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Exists, OuterRef, Q
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
 
 from .generation import GenerationFailed, generate_study_content, mark_generation_failed
-from .models import FlashcardReview, FlashcardReviewSession, Question, QuizAttempt, QuizAttemptQuestion, QuizChallenge, StudyMaterial, StudySet, StudySetParticipant
+from .models import Flashcard, FlashcardReview, FlashcardReviewSession, FlashcardSchedule, Question, QuizAttempt, QuizAttemptQuestion, QuizChallenge, StudyMaterial, StudySet, StudySetParticipant
 from .serializers import QuizAnswerSerializer, QuizSetupSerializer, StudySetSerializer
 
 
@@ -73,6 +74,21 @@ class StudySetViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.C
             access |= Q(memberships__user=self.request.user)
         return (StudySet.objects.filter(access).distinct()
                 .select_related("subject", "owner").prefetch_related("materials", "flashcards", "questions"))
+
+    @action(detail=False, methods=["get"], url_path="review-today")
+    def review_today(self, request):
+        accessible = StudySet.objects.filter(Q(owner=request.user) | Q(memberships__user=request.user)).values("pk")
+        schedules = FlashcardSchedule.objects.filter(user=request.user, flashcard_id=OuterRef("pk"))
+        due = FlashcardSchedule.objects.filter(user=request.user, flashcard_id=OuterRef("pk"),
+                                               due_on__lte=timezone.localdate())
+        cards = (Flashcard.objects.filter(study_set_id__in=accessible)
+                 .annotate(has_schedule=Exists(schedules), is_due=Exists(due))
+                 .filter(Q(has_schedule=False) | Q(is_due=True))
+                 .select_related("study_set").order_by("study_set__title", "id"))
+        return Response([{
+            "id": card.id, "front": card.front, "back": card.back,
+            "study_set_id": card.study_set_id, "study_set_title": card.study_set.title,
+        } for card in cards])
 
     @action(detail=True, methods=["get", "post", "delete"], url_path="share-code")
     def share_code(self, request, pk=None):
@@ -266,6 +282,9 @@ class StudySetViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.C
                 if session is None:
                     session = FlashcardReviewSession.objects.create(study_set=study_set, user=request.user)
                 FlashcardReview.record(session, card, feedback)
+                schedule, _ = FlashcardSchedule.objects.select_for_update().get_or_create(
+                    user=request.user, flashcard=card, defaults={"due_on": timezone.localdate()})
+                schedule.apply_feedback(feedback)
 
         latest = {}
         reviews = (FlashcardReview.objects.filter(session__study_set=study_set, session__user=request.user, flashcard__study_set=study_set)

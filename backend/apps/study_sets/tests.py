@@ -15,7 +15,7 @@ from rest_framework.test import APIClient
 from apps.subjects.models import Subject
 
 from .models import (
-    Flashcard, FlashcardReview, FlashcardReviewSession, Question, QuizAttempt,
+    Flashcard, FlashcardReview, FlashcardReviewSession, FlashcardSchedule, Question, QuizAttempt,
     QuizAttemptQuestion, StudyMaterial, StudySet, StudySetParticipant,
 )
 
@@ -283,6 +283,36 @@ class StudySetApiTests(TestCase):
         self.assertEqual(self.client.get(url).status_code, 404)
         self.client.force_authenticate(user=None)
         self.assertEqual(self.client.get(url).status_code, 401)
+
+    def test_review_queue_schedules_answers_and_keeps_shared_progress_private(self):
+        from datetime import timedelta
+        from django.utils import timezone
+
+        study_set = StudySet.objects.create(owner=self.owner, subject=self.subject, title="Cells")
+        StudySetParticipant.objects.create(study_set=study_set, user=self.other)
+        first = Flashcard.objects.create(study_set=study_set, front="First", back="One")
+        second = Flashcard.objects.create(study_set=study_set, front="Second", back="Two")
+        queue_url = "/api/study-sets/review-today/"
+        progress_url = f"/api/study-sets/{study_set.pk}/flashcard-progress/"
+        self.assertEqual({item["id"] for item in self.client.get(queue_url).data}, {first.pk, second.pk})
+
+        self.client.post(progress_url, {"flashcard_id": first.pk, "feedback": "known"})
+        schedule = FlashcardSchedule.objects.get(user=self.owner, flashcard=first)
+        self.assertEqual((schedule.known_streak, schedule.due_on), (1, timezone.localdate() + timedelta(days=3)))
+        self.assertEqual([item["id"] for item in self.client.get(queue_url).data], [second.pk])
+        schedule.due_on = timezone.localdate()
+        schedule.save(update_fields=["due_on"])
+        self.client.post(progress_url, {"flashcard_id": first.pk, "feedback": "known"})
+        schedule.refresh_from_db()
+        self.assertEqual((schedule.known_streak, schedule.due_on), (2, timezone.localdate() + timedelta(days=7)))
+        self.client.post(progress_url, {"flashcard_id": first.pk, "feedback": "learning"})
+        schedule.refresh_from_db()
+        self.assertEqual((schedule.known_streak, schedule.due_on), (0, timezone.localdate() + timedelta(days=1)))
+
+        self.client.force_authenticate(self.other)
+        self.assertEqual({item["id"] for item in self.client.get(queue_url).data}, {first.pk, second.pk})
+        self.client.force_authenticate(user=None)
+        self.assertEqual(self.client.get(queue_url).status_code, 401)
 
     def test_practice_quiz_lifecycle_and_owner_scope(self):
         study_set = StudySet.objects.create(owner=self.owner, subject=self.subject, title="Cells")
