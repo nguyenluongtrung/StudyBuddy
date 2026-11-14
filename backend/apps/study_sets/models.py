@@ -281,6 +281,39 @@ class QuizAttemptQuestion(ValidatedModel):
         return super().save(*args, **kwargs)
 
 
+class QuizChallenge(ValidatedModel):
+    study_set = models.ForeignKey(StudySet, on_delete=models.CASCADE, related_name="challenges")
+    challenger = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="sent_quiz_challenges")
+    opponent = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="received_quiz_challenges")
+    questions = models.JSONField()
+    challenger_attempt = models.OneToOneField(QuizAttempt, on_delete=models.SET_NULL, null=True, blank=True,
+                                             related_name="challenge_as_challenger")
+    opponent_attempt = models.OneToOneField(QuizAttempt, on_delete=models.SET_NULL, null=True, blank=True,
+                                           related_name="challenge_as_opponent")
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+
+    def clean(self):
+        if self.challenger_id and self.opponent_id and self.challenger_id == self.opponent_id:
+            raise ValidationError("Challenge another person.")
+        if self.study_set_id and self.challenger_id and not (
+            self.study_set.owner_id == self.challenger_id or
+            self.study_set.memberships.filter(user_id=self.challenger_id).exists()
+        ):
+            raise ValidationError("The challenger must have access to the study set.")
+        if self.study_set_id and self.opponent_id and not (
+            self.study_set.owner_id == self.opponent_id or
+            self.study_set.memberships.filter(user_id=self.opponent_id).exists()
+        ):
+            raise ValidationError("The opponent must have access to the study set.")
+        for user_id, attempt in ((self.challenger_id, self.challenger_attempt),
+                                 (self.opponent_id, self.opponent_attempt)):
+            if attempt and (attempt.user_id != user_id or attempt.study_set_id != self.study_set_id):
+                raise ValidationError("Challenge attempts must belong to the correct player and study set.")
+
+
 class FlashcardReviewSession(ValidatedModel):
     study_set = models.ForeignKey(StudySet, on_delete=models.CASCADE, related_name="flashcard_sessions")
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="flashcard_sessions")

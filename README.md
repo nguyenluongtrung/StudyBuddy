@@ -46,6 +46,8 @@ Practice quizzes use `POST /api/study-sets/{id}/quiz-attempts/` with `{"format":
 
 Owners can create a sharing code on a study set page. A signed-in friend enters the code at `/join` to add the set to their collection. Friends can read and practice the set, but cannot edit, delete, regenerate, or download its source file. Quiz attempts and flashcard progress are private to each participant. Owners can disable a code to stop new joins; existing participants keep access. Only API-backed sets can be shared.
 
+At `/challenges`, a participant can invite another member of a shared study set to a quiz challenge. Each person starts their own attempt from the same saved question snapshot. A participant sees their own score after finishing, and the friend's score appears only after both finish. Either player can create a rematch. Run `python manage.py migrate` after updating to create the challenge table.
+
 ## Classroom UI
 
 The frontend opens at `/login`. After signing in, `/dashboard` links to the study set binder and the create, edit, flashcard, quiz, and results screens. The classroom design follows the supplied Stitch screenshots.

@@ -78,6 +78,25 @@ export const saveQuizAnswer = (id: number, attemptId: number, questionId: number
   apiFetch(`/study-sets/${id}/quiz-attempts/${attemptId}/answer/`, { method: "POST", body: JSON.stringify({ question_id: questionId, selected_index: selectedIndex, seconds_spent: secondsSpent }) });
 export const finishQuizAttempt = (id: number, attemptId: number) =>
   apiFetch<ApiQuizAttempt>(`/study-sets/${id}/quiz-attempts/${attemptId}/finish/`, { method: "POST" });
+export type QuizChallenge = {
+  id: number; study_set_id: number; study_set_title: string;
+  challenger_id: number; opponent_id: number;
+  challenger_name: string; opponent_name: string; is_challenger: boolean;
+  question_count: number; created_at: string; my_attempt_id: number | null;
+  my_status: "not_started" | "in_progress" | "completed";
+  other_status: "not_started" | "in_progress" | "completed";
+  my_score: number | null; other_score: number | null;
+};
+export type ChallengePlayer = { id: number; username: string };
+export const getChallengePlayers = (id: number) =>
+  apiFetch<ChallengePlayer[]>(`/study-sets/${id}/challenge-players/`);
+export const getQuizChallenges = () => apiFetch<QuizChallenge[]>("/study-sets/challenges/");
+export const createQuizChallenge = (studySetId: number, opponentId: number, count: number) =>
+  apiFetch<QuizChallenge>("/study-sets/challenges/", {
+    method: "POST", body: JSON.stringify({ study_set_id: studySetId, opponent_id: opponentId, count }),
+  });
+export const startQuizChallenge = (challengeId: number) =>
+  apiFetch<ApiQuizAttempt>(`/study-sets/challenges/${challengeId}/start/`, { method: "POST" });
 export type FlashcardProgress = { known_flashcard_ids: number[] };
 export const getFlashcardProgress = (id: number) => apiFetch<FlashcardProgress>(`/study-sets/${id}/flashcard-progress/`);
 export const saveFlashcardFeedback = (id: number, flashcardId: number, feedback: "known" | "learning") =>

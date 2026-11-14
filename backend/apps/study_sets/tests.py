@@ -16,7 +16,7 @@ from apps.subjects.models import Subject
 
 from .models import (
     Flashcard, FlashcardReview, FlashcardReviewSession, Question, QuizAttempt,
-    QuizAttemptQuestion, StudyMaterial, StudySet,
+    QuizAttemptQuestion, StudyMaterial, StudySet, StudySetParticipant,
 )
 
 
@@ -198,6 +198,52 @@ class StudySetApiTests(TestCase):
         newcomer = get_user_model().objects.create_user(username="newcomer", password="test-password")
         self.client.force_authenticate(newcomer)
         self.assertEqual(self.client.post(join_url, {"code": code}).status_code, 400)
+
+    def test_friend_challenge_uses_same_questions_and_hides_score_until_both_finish(self):
+        study_set = StudySet.objects.create(owner=self.owner, subject=self.subject, title="Cells")
+        StudySetParticipant.objects.create(study_set=study_set, user=self.other)
+        question = Question.objects.create(
+            study_set=study_set, prompt="What is a cell?", question_type=Question.Type.MULTIPLE_CHOICE,
+            difficulty=Question.Difficulty.BALANCED, options=["Unit of life", "Atom"],
+            correct_index=0, explanation="Cells are units of life.",
+        )
+        base = "/api/study-sets/challenges/"
+        players = self.client.get(f"/api/study-sets/{study_set.pk}/challenge-players/")
+        self.assertEqual(players.data, [{"id": self.other.id, "username": self.other.username}])
+        self.assertEqual(self.client.post(base, {"study_set_id": study_set.id, "opponent_id": self.owner.id}).status_code, 400)
+        created = self.client.post(base, {"study_set_id": study_set.id, "opponent_id": self.other.id, "count": 5})
+        self.assertEqual(created.status_code, 201)
+        challenge_id = created.data["id"]
+        start_url = f"{base}{challenge_id}/start/"
+        first = self.client.post(start_url)
+        self.assertEqual(first.status_code, 200)
+        self.assertEqual(self.client.post(start_url).data["id"], first.data["id"])
+        self.assertNotIn("correct_index", first.data["questions"][0])
+        question.prompt = "Changed after challenge"
+        question.save()
+        self.client.force_authenticate(self.other)
+        self.assertEqual(len(self.client.get(base).data), 1)
+        second = self.client.post(start_url)
+        self.assertEqual(second.status_code, 200)
+        self.assertEqual(first.data["questions"][0]["question"], second.data["questions"][0]["question"])
+        second_item = second.data["questions"][0]["id"]
+        self.client.post(f"/api/study-sets/{study_set.id}/quiz-attempts/{second.data['id']}/answer/",
+                         {"question_id": second_item, "selected_index": 1})
+        self.client.post(f"/api/study-sets/{study_set.id}/quiz-attempts/{second.data['id']}/finish/")
+        self.assertIsNone(self.client.get(base).data[0]["other_score"])
+        self.client.force_authenticate(self.owner)
+        self.assertIsNone(self.client.get(base).data[0]["other_score"])
+        first_item = first.data["questions"][0]["id"]
+        self.client.post(f"/api/study-sets/{study_set.id}/quiz-attempts/{first.data['id']}/answer/",
+                         {"question_id": first_item, "selected_index": 0})
+        self.client.post(f"/api/study-sets/{study_set.id}/quiz-attempts/{first.data['id']}/finish/")
+        result = self.client.get(base).data[0]
+        self.assertEqual((result["my_score"], result["other_score"]), (100, 0))
+        stranger = get_user_model().objects.create_user(username="stranger", password="test-password")
+        self.client.force_authenticate(stranger)
+        self.assertEqual(self.client.get(base).data, [])
+        self.assertEqual(self.client.post(start_url).status_code, 404)
+        self.assertEqual(self.client.post(base, {"study_set_id": study_set.id, "opponent_id": self.owner.id}).status_code, 404)
 
     def test_authentication_and_subject_ownership(self):
         response = self.client.post("/api/study-sets/", {**self.form, "subject_id": self.other_subject.pk})
