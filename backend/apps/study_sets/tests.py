@@ -15,9 +15,70 @@ from rest_framework.test import APIClient
 from apps.subjects.models import Subject
 
 from .models import (
-    Flashcard, FlashcardReview, FlashcardReviewSession, FlashcardSchedule, Question, QuizAttempt,
+    ExamPlan, Flashcard, FlashcardReview, FlashcardReviewSession, FlashcardSchedule, Question, QuizAttempt,
     QuizAttemptQuestion, StudyMaterial, StudySet, StudySetParticipant,
 )
+
+
+class ExamPlanTests(TestCase):
+    def setUp(self):
+        user_model = get_user_model()
+        self.owner = user_model.objects.create_user(username="planner", password="test-password")
+        self.other = user_model.objects.create_user(username="friend", password="test-password")
+        self.own_subject = Subject.objects.create(owner=self.owner, name="Biology")
+        other_subject = Subject.objects.create(owner=self.other, name="Math")
+        self.study_set = StudySet.objects.create(owner=self.owner, subject=self.own_subject, title="Cells")
+        self.other_set = StudySet.objects.create(owner=self.other, subject=other_subject, title="Algebra")
+        self.cards = [Flashcard.objects.create(study_set=self.study_set, front=f"Card {i}", back="Answer") for i in range(3)]
+        self.client = APIClient()
+        self.client.force_authenticate(self.owner)
+
+    def test_plan_access_and_selected_set_validation(self):
+        from datetime import timedelta
+        from django.utils import timezone
+
+        url = "/api/exam-plans/"
+        exam_date = (timezone.localdate() + timedelta(days=2)).isoformat()
+        data = {"title": "Biology final", "exam_date": exam_date, "study_set_ids": [self.study_set.id]}
+        self.assertEqual(self.client.post(url, {**data, "study_set_ids": []}, format="json").status_code, 400)
+        self.assertEqual(self.client.post(url, {**data, "study_set_ids": [self.other_set.id]}, format="json").status_code, 400)
+        self.assertEqual(self.client.post(url, {**data, "exam_date": "2020-01-01"}, format="json").status_code, 400)
+        created = self.client.post(url, data, format="json")
+        self.assertEqual(created.status_code, 201)
+        self.assertEqual(created.data["daily_progress"]["daily_goal"], 1)
+        plan_url = f"{url}{created.data['id']}/"
+        self.assertEqual(self.client.patch(plan_url, {"title": "Updated"}, format="json").status_code, 200)
+        self.client.force_authenticate(self.other)
+        self.assertEqual(self.client.get(url).data, [])
+        self.assertEqual(self.client.get(plan_url).status_code, 404)
+        self.assertEqual(self.client.delete(plan_url).status_code, 404)
+        membership = StudySetParticipant.objects.create(study_set=self.study_set, user=self.other)
+        shared_plan = self.client.post(url, data, format="json")
+        self.assertEqual(shared_plan.status_code, 201)
+        membership.delete()
+        hidden = self.client.get(f"{url}{shared_plan.data['id']}/").data
+        self.assertEqual(hidden["study_set_ids"], [])
+        self.assertEqual(hidden["study_set_titles"], [])
+        self.assertEqual(hidden["daily_progress"]["unseen_cards"], 0)
+
+    def test_daily_goal_tracks_first_reviews_and_due_cards(self):
+        from datetime import timedelta
+        from django.utils import timezone
+
+        plan = ExamPlan.objects.create(owner=self.owner, title="Biology final", exam_date=timezone.localdate() + timedelta(days=1))
+        plan.study_sets.add(self.study_set)
+        url = f"/api/exam-plans/{plan.id}/"
+        initial = self.client.get(url).data["daily_progress"]
+        self.assertEqual((initial["daily_goal"], initial["new_cards_today"], initial["unseen_cards"]), (2, 0, 3))
+        self.client.post(f"/api/study-sets/{self.study_set.id}/flashcard-progress/", {
+            "flashcard_id": self.cards[0].id, "feedback": "known"
+        })
+        updated = self.client.get(url).data["daily_progress"]
+        self.assertEqual((updated["daily_goal"], updated["new_cards_today"], updated["unseen_cards"]), (2, 1, 2))
+        schedule = FlashcardSchedule.objects.get(user=self.owner, flashcard=self.cards[0])
+        schedule.due_on = timezone.localdate() - timedelta(days=1)
+        schedule.save(update_fields=["due_on"])
+        self.assertEqual(self.client.get(url).data["daily_progress"]["due_cards"], 1)
 
 
 class StudySetModelTests(TestCase):

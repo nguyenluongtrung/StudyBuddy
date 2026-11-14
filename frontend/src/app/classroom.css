@@ -3254,3 +3254,63 @@ button:disabled {
     justify-content: start;
   }
 }
+
+.dashboard-exam-plan {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  background: #f0fbf4;
+}
+.dashboard-exam-plan h2 { margin: 0 0 4px; color: #0b573e; font-family: Fredoka, Nunito, sans-serif; }
+.dashboard-exam-plan p { margin: 0; color: #527060; font-size: 14px; }
+.dashboard-exam-plan .pill-button { flex: none; }
+.exam-plans-page { max-width: 1160px; margin: 0 auto; }
+.exam-plans-heading h1 { font-family: Fredoka, Nunito, sans-serif; color: #063d29; font-size: clamp(30px, 4vw, 44px); margin: 4px 0; }
+.exam-plans-heading > div > p:last-child { color: #527060; margin: 0 0 26px; }
+.exam-plans-layout { display: grid; grid-template-columns: minmax(300px, 390px) minmax(0, 1fr); gap: 24px; align-items: flex-start; }
+.exam-plan-editor { padding: 24px; background: #fff; }
+.exam-plan-editor h2, .exam-plan-list h2 { font-family: Fredoka, Nunito, sans-serif; color: #0b573e; margin: 0 0 18px; }
+.exam-plan-editor form { display: flex; flex-direction: column; gap: 9px; }
+.exam-plan-editor form > label, .exam-plan-editor legend { font-weight: 800; color: #164b35; font-size: 14px; }
+.exam-plan-editor input[type="text"], .exam-plan-editor input[type="date"], .exam-plan-editor input:not([type]) {
+  width: 100%; padding: 12px 14px; border: 1px solid #a8c9b6; border-radius: 12px; background: #fff; color: #063d29;
+}
+.exam-plan-editor fieldset { border: 0; padding: 12px 0 0; margin: 0; }
+.exam-plan-editor legend { padding: 0; margin-bottom: 7px; }
+.exam-plan-editor fieldset > p { color: #527060; line-height: 1.5; }
+.exam-plan-set-help { font-size: 12px; margin: 0 0 7px; }
+.exam-plan-editor fieldset a { text-decoration: underline; }
+.exam-set-choice { display: flex; align-items: center; gap: 12px; padding: 11px 8px; border-bottom: 1px solid #dfebdf; cursor: pointer; }
+.exam-set-choice input { width: 18px; height: 18px; accent-color: #0b573e; flex: none; }
+.exam-set-choice span { display: flex; flex-direction: column; gap: 2px; }
+.exam-set-choice strong { color: #164b35; font-size: 14px; }
+.exam-set-choice small { color: #527060; }
+.exam-plan-form-actions, .exam-plan-card-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; margin-top: 16px; }
+.exam-plan-list { min-width: 0; }
+.exam-plan-list > p, .exam-plan-empty { color: #527060; }
+.exam-plan-empty { padding: 28px; }
+.exam-plan-card { background: #fff; padding: 22px; margin-bottom: 16px; }
+.exam-plan-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 15px; }
+.exam-plan-card h3 { font-family: Fredoka, Nunito, sans-serif; color: #063d29; margin: 0 0 3px; font-size: 22px; }
+.exam-plan-card-top p, .exam-plan-sets { margin: 0; color: #527060; font-size: 14px; }
+.exam-plan-days { background: #e4f4e9; color: #0b573e; border-radius: 999px; padding: 6px 11px; font-size: 12px; font-weight: 900; white-space: nowrap; }
+.exam-plan-sets { margin-top: 14px; }
+.exam-plan-target { margin-top: 20px; padding: 17px; border-radius: 14px; background: #f0fbf4; }
+.exam-plan-target strong { font-family: Fredoka, Nunito, sans-serif; font-size: 29px; color: #0b573e; margin-right: 8px; }
+.exam-plan-target > span { color: #345b47; font-size: 13px; font-weight: 800; }
+.exam-plan-target small { display: block; color: #527060; margin-top: 9px; }
+.exam-plan-meter { height: 8px; border-radius: 99px; background: #d1e7d8; overflow: hidden; margin-top: 12px; }
+.exam-plan-meter span { display: block; height: 100%; border-radius: inherit; background: #23845a; }
+.exam-plan-delete { border: 0; background: none; color: #a13832; font-weight: 800; cursor: pointer; padding: 10px; }
+.exam-plan-delete:hover { text-decoration: underline; }
+.exam-plan-editor input:focus-visible, .exam-plan-delete:focus-visible { outline: 3px solid #23845a; outline-offset: 2px; }
+@media (max-width: 800px) {
+  .exam-plans-layout { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  .dashboard-exam-plan { align-items: flex-start; flex-direction: column; }
+  .exam-plan-card-top { flex-direction: column; }
+}
