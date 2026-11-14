@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useStudySets } from "@/components/classroom/useStudySets";
+import ClassroomSelect from "@/components/classroom/ClassroomSelect";
 import {
   deleteApiStudySet,
   isApiSetId,
@@ -97,14 +98,16 @@ function StudySetsContent() {
           <p>Organize and review the study sets you create.</p>
         </div>
         <div className="binder-controls">
-          <select
-            aria-label="Sort study sets"
+          <ClassroomSelect
+            id="study-set-sort"
+            ariaLabel="Sort study sets"
             value={sort}
-            onChange={(event) => setSort(event.target.value)}
-          >
-            <option>Recently Updated</option>
-            <option>Title</option>
-          </select>
+            onChange={setSort}
+            options={[
+              { value: "Recently Updated", label: "Recently Updated" },
+              { value: "Title", label: "Title" },
+            ]}
+          />
           <Link className="pill-button light" href="/join">Join a study set</Link>
           <Link className="pill-button dark" href="/study-sets/new">
             Create New Set

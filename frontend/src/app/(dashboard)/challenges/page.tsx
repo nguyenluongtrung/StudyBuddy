@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useStudySets } from "@/components/classroom/useStudySets";
+import ClassroomSelect from "@/components/classroom/ClassroomSelect";
 import {
   createQuizChallenge, getChallengePlayers, getQuizChallenges, isApiSetId,
   serverSetId, startQuizChallenge, studySetPath,
@@ -85,8 +86,8 @@ export default function ChallengesPage() {
 
   return <div className="challenges-page">
     <header className="challenge-heading">
-      <div><p className="crumbs"><Link href="/dashboard">Dashboard</Link> / Challenges</p>
-        <h1>Study together. Compare what stuck.</h1>
+      <div><p className="crumbs"><Link href="/dashboard">Classroom</Link> / Challenges</p>
+        <h1>Challenges</h1>
         <p>Invite someone who joined your study set. You both answer the same questions on your own time.</p>
       </div>
     </header>
@@ -94,17 +95,21 @@ export default function ChallengesPage() {
       <div><h2 id="challenge-create-title">Start a challenge</h2>
         <p>Choose a shared set and a friend. Scores appear once both quizzes are done.</p></div>
       <form onSubmit={createChallenge}>
-        <label>Study set<select value={setId} onChange={(event) => setSetId(event.target.value)} required>
-          {eligibleSets.length === 0 && <option value="">No quiz sets yet</option>}
-          {eligibleSets.map((set) => <option key={set.id} value={set.id}>{set.title}</option>)}
-        </select></label>
-        <label>Friend<select value={opponentId} onChange={(event) => setOpponentId(event.target.value)} required>
-          <option value="">Choose a friend</option>
-          {players.map((player) => <option key={player.id} value={player.id}>{player.username}</option>)}
-        </select></label>
-        <label>Questions<select value={count} onChange={(event) => setCount(Number(event.target.value))}>
-          <option value={5}>5 questions</option><option value={10}>10 questions</option><option value={15}>15 questions</option>
-        </select></label>
+        <div className="challenge-field"><label htmlFor="challenge-set">Study set</label>
+          <ClassroomSelect id="challenge-set" ariaLabel="Study set" value={setId} onChange={setSetId} disabled={!eligibleSets.length} options={eligibleSets.length
+            ? eligibleSets.map((set) => ({ value: set.id, label: set.title }))
+            : [{ value: "", label: "No quiz sets yet", disabled: true }]} /></div>
+        <div className="challenge-field"><label htmlFor="challenge-friend">Friend</label>
+          <ClassroomSelect id="challenge-friend" ariaLabel="Friend" value={opponentId} onChange={setOpponentId} options={[
+            { value: "", label: "Choose a friend" },
+            ...players.map((player) => ({ value: String(player.id), label: player.username })),
+          ]} /></div>
+        <div className="challenge-field"><label htmlFor="challenge-count">Questions</label>
+          <ClassroomSelect id="challenge-count" ariaLabel="Questions" value={String(count)} onChange={(value) => setCount(Number(value))} options={[
+            { value: "5", label: "5 questions" },
+            { value: "10", label: "10 questions" },
+            { value: "15", label: "15 questions" },
+          ]} /></div>
         <button className="pill-button dark" disabled={busy || !opponentId} type="submit">
           {busy ? "Creating…" : "Send challenge"}
         </button>
