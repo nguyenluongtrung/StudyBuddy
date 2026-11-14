@@ -3,19 +3,38 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useStudySets } from "@/components/classroom/useStudySets";
-import { readActiveStudyUser } from "@/lib/study-data";
-import { studySetPath } from "@/lib/api/study-sets";
+import { readActiveStudyUser, readLocalReviewQueue } from "@/lib/study-data";
+import { getReviewToday, isApiSetId, studySetPath } from "@/lib/api/study-sets";
 
 export default function DashboardPage() {
   const { sets, loading, apiError } = useStudySets();
   const [name, setName] = useState("");
+  const [dueCount, setDueCount] = useState<number | null>(null);
+  const [reviewError, setReviewError] = useState("");
   useEffect(() => {
     const update = () => setName(readActiveStudyUser());
     update();
     window.addEventListener("studybuddy:sets", update);
     return () => window.removeEventListener("studybuddy:sets", update);
   }, []);
+  useEffect(() => {
+    let active = true;
+    getReviewToday()
+      .then((cards) => {
+        if (active) setDueCount(cards.length);
+      })
+      .catch(() => {
+        if (active) setReviewError("Review count could not be loaded.");
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
   const active = sets.slice(0, 3);
+  const localDueCount = readLocalReviewQueue(
+    sets.filter((set) => !isApiSetId(set.id)),
+  ).length;
+  const totalDueCount = dueCount === null ? null : dueCount + localDueCount;
 
   return (
     <div className="dashboard-page">
@@ -43,11 +62,17 @@ export default function DashboardPage() {
           <p>Sets in your collection</p>
         </div>
         <div className="stat-card outlined-card">
-          <small>FLASHCARDS</small>
-          <strong>
-            {sets.reduce((sum, set) => sum + set.cards.length, 0)}
-          </strong>
-          <p>Cards to review</p>
+          <small>REVIEW TODAY</small>
+          <strong>{totalDueCount === null ? "—" : totalDueCount}</strong>
+          <p>
+            {reviewError ||
+              (totalDueCount === 0
+                ? "All caught up for today"
+                : "Flashcards due now")}
+          </p>
+          <Link className="pill-button dark" href="/review-today">
+            Review today
+          </Link>
         </div>
         <div className="stat-card outlined-card">
           <small>QUIZ QUESTIONS</small>

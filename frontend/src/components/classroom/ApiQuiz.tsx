@@ -134,7 +134,9 @@ export default function ApiQuiz({
         }
         await finishQuizAttempt(serverSetId(id), attempt.id);
         sessionStorage.removeItem(`studybuddy.quizAttempt.${id}`);
-        router.push(`${studySetPath(id)}/results`);
+        const challengeId = sessionStorage.getItem(`studybuddy.quizChallenge.${id}`);
+        sessionStorage.removeItem(`studybuddy.quizChallenge.${id}`);
+        router.push(challengeId ? `/challenges/${challengeId}` : `${studySetPath(id)}/results`);
       } else {
         setIndex(next);
         setSelected(updated[next].selected_index);

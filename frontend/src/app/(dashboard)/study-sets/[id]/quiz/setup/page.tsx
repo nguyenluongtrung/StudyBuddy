@@ -57,6 +57,7 @@ export default function QuizSetupPage() {
       const config = { format, count: [5, 10, 15][length], level };
       sessionStorage.setItem(`studybuddy.quizConfig.${id}`, JSON.stringify(config));
       sessionStorage.removeItem(`studybuddy.quizAttempt.${id}`);
+      sessionStorage.removeItem(`studybuddy.quizChallenge.${id}`);
       if (isApiSetId(id)) {
         const attempt = await createQuizAttempt(serverSetId(id), {
           format: (["multiple_choice", "true_false", "mixed"] as const)[format],

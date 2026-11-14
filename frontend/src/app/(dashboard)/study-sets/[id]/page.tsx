@@ -190,6 +190,14 @@ export default function StudySetDetailsPage() {
         {shareCode && <p className="share-note">Disabling the code stops new joins. Friends who already joined keep access.</p>}
       </section>}
       <div className="study-action-grid">
+        {isApiSetId(id) && set.questions.length > 0 && <article className="study-action outlined-card">
+          <div className="action-art quiz-art"><span>✦</span><small>FRIEND CHALLENGE</small></div>
+          <h2>Challenge a friend</h2>
+          <p>Take the same quiz and compare scores after both of you finish.</p>
+          <Link className="pill-button dark" href={`/challenges?set=${encodeURIComponent(id)}`}>
+            Choose a friend
+          </Link>
+        </article>}
         <article className="study-action outlined-card">
           <div className="action-art quiz-art">
             <span>🎯</span>

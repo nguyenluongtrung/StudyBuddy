@@ -15,6 +15,7 @@ const navigationLinks = [
   { href: "/dashboard", icon: "▦", label: "Dashboard" },
   { href: "/study-sets", icon: "▣", label: "My Study Sets" },
   { href: "/progress", icon: "↗", label: "Progress" },
+  { href: "/challenges", icon: "✦", label: "Challenges" },
   { href: "/profile", icon: "♙", label: "Profile" },
 ];
 
